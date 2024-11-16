@@ -1,0 +1,22 @@
+stages:
+  clean:
+    cmd: python3 src/clean.py data/raw/2015_2024_statcast.parquet
+    deps:
+      - data/raw/2015_2024_statcast.parquet
+      - src/clean.py
+  featurize:
+    cmd: python3 src/featurize.py data/cleaned/2015_2024_statcast_clean.parquet
+    deps:
+      - data/cleaned/2015_2024_statcast_clean.parquet
+      - src/featurize.py
+  train:
+    cmd: python3 src/train.py data/training/2015_2024_statcast_train.parquet
+    deps:
+      - data/training/2015_2024_statcast_train.parquet
+      - src/lstm_model.py
+      - src/train.py
+  evaluate:
+    cmd: python3 src/evaluate.py data/evaluate/pitcher_data.pickle
+    deps:
+      - data/evaluate/pitcher_data.pickle
+      - src/evaluate.py

@@ -1,0 +1,14 @@
+.github/
+.vscode/
+.idea/
+data/cleaned/
+data/raw/
+data/evaluate/
+data/training/
+logs/
+README.html
+best_model.keras
+src/__pycache__/
+README_files/
+notebooks/
+.dvc/
