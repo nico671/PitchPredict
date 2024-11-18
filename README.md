@@ -1,6 +1,17 @@
 # PitchPredict
 
-## Overview
+README TOC:
+
+- [Code Overview](#code-overview)
+  - [Data Collection](#data-collection)
+  - [Data Cleaning](#data-cleaning)
+  - [Feature Engineering](#feature-engineering)
+  - [Model Training](#model-training)
+  - [Model Evaluation](#model-evaluation)
+- [Experiment Results](#experiment-results)
+- [Next Steps](#next-steps)
+
+## Code Overview
 
 This project is a ML pipeline that predicts the next pitch type that a pitcher will throw based on a sequence of previous pitches. The pipeline is built using the following steps:
 
@@ -10,13 +21,13 @@ This project is a ML pipeline that predicts the next pitch type that a pitcher w
 4. [Model Training](#model-training)
 5. [Model Evaluation](#model-evaluation)
 
-## Data Collection
+### Data Collection
 
 Data is sourced from Baseball Savant, a website that provides detailed baseball statistics. The data is collected using the pybaseball library, which is a Python wrapper for the Baseball Savant API. The returned data is pitch-by-pitch data for seasons 2015-2024, which is the entire timeframe that Baseball Savant has data for. This long timeframe is used to ensure that there is enough data to train the model and also test the model across multiple time periods, as the ideal model is trainable off the least amount of data possible. As pitchers arsenals and pitching strategies change over time, it is extremely desirable for a model to be accurate based off little data, allowing it to be used in real-time situations.
 
 Documentation for the pybaseball library can be found [here](https://github.com/jldbc/pybaseball) and documentation for the Baseball Savant API can be found [here](https://baseballsavant.mlb.com/csv-docs).
 
-## Data Cleaning
+### Data Cleaning
 
 There is a very minimal amount of data cleaning applied to the data. In the future, the featurization and cleaning stages may be combined, but for now they are seperate. The clean stage primarily restricts the data to only include the pitchers and years of data which the model should be trained on. The cleaning stage also drops any duplicate rows in the data.
 
@@ -28,7 +39,7 @@ The featurization stage is key for preparing the data to be used for training th
 
 The source for the stage can be found at `src/featurize.py`.
 
-## Model Training
+### Model Training
 
 The training stage is responsible for training the LSTM model on the prepared dataset. It is important to note that an individual model is trained for each pitcher, as these are highly specific applications and a general model cannot be expected to capture the nuances of each pitcher. This stage takes the featurized data as input and performs the following steps:
 
@@ -44,7 +55,7 @@ The training stage is responsible for training the LSTM model on the prepared da
 
 The source for the stage can be found at `src/train.py` and the model defionition can be found at `src/lstm_model.py`.
 
-## Model Evaluation
+### Model Evaluation
 
 The evaluation stage analyzes the performance of the trained LSTM models. This stage loads the trained models and their corresponding test data, performing the following evaluations:
 
@@ -53,3 +64,11 @@ The evaluation stage analyzes the performance of the trained LSTM models. This s
 
 The source for the stage can be found at `src/evaluate.py`.
 Plots can be found in the `data/outputs` directory.
+
+## Experiment Results
+
+UNDER CONSTRUCTION
+
+## Next Steps
+
+UNDER CONSTRUCTION
