@@ -16,7 +16,6 @@ logger.addHandler(handler)
 
 
 def main():
-
     # check for correct input length
     if len(sys.argv) != 2:
         logger.error("Arguments error. Usage:\n")

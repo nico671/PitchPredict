@@ -156,7 +156,7 @@ def main():
         for item in features:
             f.write("%s\n" % item)
     # Fill NaN values if necessary
-    df = df.fillna(-1)
+    df = df.fillna(-1).infer_objects(copy=False)
     # Create the output DataFrame
     output_df = df[features + ["next_pitch", "pitcher", "player_name", "game_date"]]
     # Drop duplicated columns
