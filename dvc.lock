@@ -9,8 +9,13 @@ stages:
       size: 631521449
     - path: src/clean.py
       hash: md5
-      md5: d23bc85b70053f6beb24ce7c9018a8b7
-      size: 2346
+      md5: 99b2c2df56c5cb0d4a89cc79a86ff1f1
+      size: 2345
+    outs:
+    - path: data/cleaned/2015_2024_statcast_clean.parquet
+      hash: md5
+      md5: acd9569c5ce78198d2f2c09f69e6d363
+      size: 2018654
   data_split:
     cmd: python3 src/data_split.py data/cleaned/2015_2024_statcast_clean.parquet
     deps:
@@ -27,8 +32,8 @@ stages:
     deps:
     - path: data/training/2015_2024_statcast_train.parquet
       hash: md5
-      md5: 96741ed886350b6b108752c5b8d0fb6d
-      size: 3016869
+      md5: e8c327c667a05039a30ea774346b09e6
+      size: 1549820
     - path: src/lstm_model.py
       hash: md5
       md5: 25a183f3dd07e93ae511ab60aa87f8b9
@@ -37,24 +42,34 @@ stages:
       hash: md5
       md5: 058793641c08469e676564f3e4ab1734
       size: 6092
+    outs:
+    - path: data/evaluate/pitcher_data.pickle
+      hash: md5
+      md5: b59d364f4b170db1793a2fb70e5d2efe
+      size: 46517566
   featurize:
     cmd: python3 src/featurize.py data/cleaned/2015_2024_statcast_clean.parquet
     deps:
     - path: data/cleaned/2015_2024_statcast_clean.parquet
       hash: md5
-      md5: cf54901bcfac187edeaa93b98cbe49e4
-      size: 9231099
+      md5: acd9569c5ce78198d2f2c09f69e6d363
+      size: 2018654
     - path: src/featurize.py
       hash: md5
-      md5: cdcc1bfd5090512d4f9e37ca50bed523
-      size: 5364
+      md5: 275a7bdfa209738af7accd781ae41045
+      size: 5390
+    outs:
+    - path: data/training/2015_2024_statcast_train.parquet
+      hash: md5
+      md5: e8c327c667a05039a30ea774346b09e6
+      size: 1549820
   evaluate:
     cmd: python3 src/evaluate.py data/evaluate/pitcher_data.pickle
     deps:
     - path: data/evaluate/pitcher_data.pickle
       hash: md5
-      md5: 60b123a9bef7c81a9ca0450053a5b8b4
-      size: 58773031
+      md5: b59d364f4b170db1793a2fb70e5d2efe
+      size: 46517566
     - path: src/evaluate.py
       hash: md5
       md5: 68fe94d814f5ba3594ffc84c854f66a4
