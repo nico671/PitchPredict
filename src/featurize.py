@@ -1,10 +1,8 @@
 import logging
 import sys
-import argparse
-import pandas as pd
-import os
 from pathlib import Path
-from sklearn.preprocessing import MinMaxScaler
+import pandas as pd
+import yaml
 
 logger = logging.getLogger("featurize")
 logger.setLevel(logging.INFO)
@@ -30,7 +28,11 @@ def main():
         logger.error("not enough inputs, expected input structure is: *.py *.parquet")
         sys.exit(1)
 
-    df = pd.read_parquet(Path(sys.argv[1]))
+    with open("params.yaml", "r") as file:
+        params = yaml.safe_load(file)
+
+    input_file_path = params["featurize"]["input_data_path"]
+    df = pd.read_parquet(Path(input_file_path))
     logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
 
     logger.info("Creating target column")
@@ -89,57 +91,12 @@ def main():
     df["is_high_pressure"] = (
         ((df["inning"] >= 7) & (abs(df["run_diff"]) <= 3))
     ).astype(int)
-    features = [
-        "stand",
-        "is_high_pressure",
-        "zone",
-        "cumulative_pitch_count",
-        "count",
-        "inning_topbot",
-        "if_fielding_alignment",
-        "of_fielding_alignment",
-        "at_bat_number",
-        "pitch_number",
-        "run_diff",
-        "base_state",
-        "release_speed",
-        "release_pos_x",
-        "release_pos_z",
-        "pfx_x",
-        "pfx_z",
-        "plate_x",
-        "plate_z",
-        "outs_when_up",
-        "inning",
-        "hc_x",
-        "hc_y",
-        "vx0",
-        "vy0",
-        "vz0",
-        "ax",
-        "ay",
-        "az",
-        "hit_distance_sc",
-        "launch_speed",
-        "launch_angle",
-        "effective_speed",
-        "release_spin_rate",
-        "release_extension",
-        "release_pos_y",
-        "estimated_woba_using_speedangle",
-        "woba_value",
-        "woba_denom",
-        "babip_value",
-        "iso_value",
-        "launch_speed_angle",
-        "spin_axis",
-        "delta_run_exp",
-        "is_tied",
-        "is_leading",
-        "is_trailing",
-        "pitcher_game_pitch_count",
-        "spin_rate",
-    ]
+
+    features = []
+    features_path = Path(params["featurize"]["features_path"])
+    with open(features_path, "r") as f:
+        for item in f.readlines():
+            features.append(item.strip())
 
     df["is_tied"] = (df["run_diff"] == 0).astype(int)
     df["is_leading"] = (df["run_diff"] > 0).astype(int)
@@ -152,9 +109,6 @@ def main():
     logger.info(f"Shape is now: {df.shape[0]} rows and {df.shape[1]} columns")
     df = df.fillna(-1)
 
-    with open("data/features.txt", "w") as f:
-        for item in features:
-            f.write("%s\n" % item)
     # Fill NaN values if necessary
     df = df.fillna(-1).infer_objects(copy=False)
     # Create the output DataFrame

@@ -1,7 +1,5 @@
 import sys
-import argparse
 import pandas as pd
-import os
 from pathlib import Path
 import logging
 import yaml
@@ -35,7 +33,7 @@ def main():
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
 
-    input_file_path = params["clean"]["data_path"]
+    input_file_path = params["clean"]["input_data_path"]
 
     # read in the complete data frame
     df = pd.read_parquet(Path(input_file_path))

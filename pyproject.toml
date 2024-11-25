@@ -1,0 +1,14 @@
+[project]
+name = "pitchpredict"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastparquet>=2024.11.0",
+    "pandas>=2.2.3",
+    "pyarrow>=18.0.0",
+    "pyyaml>=6.0.2",
+    "ruff>=0.8.0",
+    "scikit-learn>=1.5.2",
+]

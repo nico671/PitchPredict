@@ -1,7 +1,8 @@
 clean:
-  data_path: data/raw/2015_2024_statcast.parquet
+  input_data_path: data/raw/2015_2024_statcast.parquet
   num_pitchers: 5
   start_year: 2024
 
 featurize:
-  data_path: data/cleaned/2015_2024_statcast.parquet
+  input_data_path: data/cleaned/2015_2024_statcast_clean.parquet
+  features_path: data/full_features.txt
