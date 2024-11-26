@@ -32,7 +32,6 @@ def main():
     #     sys.exit(1)
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
-
     input_file_path = params["clean"]["input_data_path"]
 
     # read in the complete data frame

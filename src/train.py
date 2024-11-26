@@ -100,7 +100,7 @@ def training_loop(df):
     count = 0
     logger.info(f"Number of pitchers: {len(df["pitcher"].unique())}")
     features = []
-    with open("data/features.txt", "r") as f:
+    with open("data/full_features.txt", "r") as f:
         features = f.read().splitlines()
 
     for pitcher in df["pitcher"].unique():
