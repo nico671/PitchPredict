@@ -4,6 +4,7 @@ stages:
     deps:
       - data/raw/2015_2024_statcast.parquet
       - src/clean.py
+      - params.yaml
     outs:
       - data/cleaned/2015_2024_statcast_clean.parquet
   featurize:
