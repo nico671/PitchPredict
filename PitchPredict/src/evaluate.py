@@ -31,13 +31,11 @@ def main():
     with open(file_name, "rb") as f:
         pitcher_data = pickle.load(f)
 
-    label_encoder = LabelEncoder()
-
-    all_labels = [pitcher_data[pitcher]["y_test"] for pitcher in pitcher_data]
-    label_encoder.fit(np.concatenate(all_labels))
     accuracy = []
     accuracy_diff = []
     for pitcher in pitcher_data:
+        label_encoder = pitcher_data[pitcher]["label_encoder"]
+        label_encoder.fit(pitcher_data[pitcher]["y_test"])
         logger.info(f'Pitcher: {pitcher_data[pitcher]["player_name"]}')
         logger.info(
             f'Test Loss: {pitcher_data[pitcher]["test_loss"]:.4f}, Test Accuracy: {pitcher_data[pitcher]["test_accuracy"]:.4f}'

@@ -22,23 +22,21 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, class_weight):
             restore_best_weights=True,
         ),
         tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss", factor=0.2, patience=PATIENCE, min_lr=1e-6
+            monitor="val_loss",
+            factor=0.2,
+            patience=PATIENCE,
+            min_lr=1e-6,
         ),
-        # tf.keras.callbacks.ModelCheckpoint(
-        #     "best_model.keras",  # Update file path to end with .keras
-        #     save_best_only=True,
-        #     monitor="val_sparse_categorical_accuracy",
-        # ),
     ]
 
     history = model.fit(
         X_train,
         y_train,
         validation_data=(X_val, y_val),
-        epochs=50,  # Increase epochs since we have early stopping
-        batch_size=16,  # Slightly larger batch size
+        epochs=30,  # early stopping typically occurs around 20 anyways
+        batch_size=16,
         callbacks=callbacks,
-        # class_weight=class_weight, # commented out because it hurts performance
+        # class_weight=class_weight, # hurts performance
     )
 
     return history

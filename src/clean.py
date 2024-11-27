@@ -15,9 +15,9 @@ logger.addHandler(handler)
 
 def main():
     # check for correct input length
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 1:
         logger.error("Arguments error. Usage:\n")
-        logger.error("not enough inputs, expected input structure is: *.py *.parquet")
+        logger.error("not enough inputs, expected input structure is: *.py")
         sys.exit(1)
     # check for correct input file types
     elif ".py" not in sys.argv[0]:
@@ -25,11 +25,6 @@ def main():
             "Please enter a valid python source file as the first input for this stage"
         )
         sys.exit(1)
-    # elif ".parquet" not in sys.argv[1]:
-    #     logger.error(
-    #         "Please enter a valid parquet file as the second input for this stage"
-    #     )
-    #     sys.exit(1)
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
     input_file_path = params["clean"]["input_data_path"]

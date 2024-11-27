@@ -8,6 +8,7 @@ from sklearn.calibration import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 from statistics import mean
 import numpy as np
+import yaml
 from lstm_model import (
     calculate_class_weights,
     compile_and_fit,
@@ -95,13 +96,65 @@ def create_training_data(df, pitcher, features):
     )
 
 
-def training_loop(df):
+def training_loop(df, params):
     pitcher_data = {}
     count = 0
     logger.info(f"Number of pitchers: {len(df["pitcher"].unique())}")
-    features = []
-    with open("data/full_features.txt", "r") as f:
-        features = f.read().splitlines()
+    features = [
+        "stand",
+        "is_high_pressure",
+        "zone",
+        "cumulative_pitch_count",
+        "count",
+        "inning_topbot",
+        "if_fielding_alignment",
+        "of_fielding_alignment",
+        "at_bat_number",
+        "pitch_number",
+        "run_diff",
+        "base_state",
+        "release_speed",
+        "release_pos_x",
+        "release_pos_z",
+        "pfx_x",
+        "pfx_z",
+        "plate_x",
+        "plate_z",
+        "outs_when_up",
+        "inning",
+        "hc_x",
+        "hc_y",
+        "vx0",
+        "vy0",
+        "vz0",
+        "ax",
+        "ay",
+        "az",
+        "hit_distance_sc",
+        "launch_speed",
+        "launch_angle",
+        "effective_speed",
+        "release_spin_rate",
+        "release_extension",
+        "release_pos_y",
+        "estimated_woba_using_speedangle",
+        "woba_value",
+        "woba_denom",
+        "babip_value",
+        "iso_value",
+        "launch_speed_angle",
+        "spin_axis",
+        "delta_run_exp",
+        "is_tied",
+        "is_leading",
+        "is_trailing",
+        "pitcher_game_pitch_count",
+        "spin_rate",
+    ]
+    # features_path = Path(params["train"]["features_path"])
+    # with open(features_path, "r") as f:
+    #     for item in f.readlines():
+    #         features.append(item.strip())
 
     for pitcher in df["pitcher"].unique():
         logger.info(
@@ -134,6 +187,7 @@ def training_loop(df):
             "player_name": df[df["pitcher"] == pitcher]["player_name"].iloc[0],
             "X_test": X_test,
             "y_test": y_test,
+            "label_encoder": label_encoder,
             "most_common_pitch_rate": pitcher_df["next_pitch"]
             .value_counts()
             .sort_values(ascending=False)
@@ -152,19 +206,22 @@ def training_loop(df):
 
 
 def main():
-
-    if len(sys.argv) != 2:
-        sys.stderr.write("Arguments error. Usage:\n")
-        sys.stderr.write("\tpython prepare.py data-file\n")
+    if len(sys.argv) != 1:
+        logger.error("Arguments error. Usage:\n")
+        logger.error("not enough inputs, expected input structure is: *.py")
         sys.exit(1)
-    file_name = sys.argv[1]
 
-    df = pd.read_parquet(Path(file_name))
-    pitcher_data = training_loop(df)
+    with open("params.yaml", "r") as file:
+        params = yaml.safe_load(file)
+
+    input_file_path = params["featurize"]["input_data_path"]
+    df = pd.read_parquet(Path(input_file_path))
+    logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
+    pitcher_data = training_loop(df, params)
 
     output_dir = Path("data/evaluate/")
     if os.path.isfile(output_dir / "pitcher_data.pickle"):
-        os.remove(output_dir / "pitcher_data.pickle")  # Opt.: os.system("rm "+strFile)
+        os.remove(output_dir / "pitcher_data.pickle")
     os.makedirs(output_dir, exist_ok=True)
     with open(output_dir / "pitcher_data.pickle", "wb") as f:
         pickle.dump(pitcher_data, f)

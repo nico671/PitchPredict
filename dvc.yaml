@@ -1,6 +1,6 @@
 stages:
   clean:
-    cmd: python3 src/clean.py data/raw/2015_2024_statcast.parquet
+    cmd: python3 src/clean.py
     deps:
       - data/raw/2015_2024_statcast.parquet
       - src/clean.py
@@ -8,14 +8,14 @@ stages:
     outs:
       - data/cleaned/2015_2024_statcast_clean.parquet
   featurize:
-    cmd: python3 src/featurize.py data/cleaned/2015_2024_statcast_clean.parquet
+    cmd: python3 src/featurize.py
     deps:
       - data/cleaned/2015_2024_statcast_clean.parquet
       - src/featurize.py
     outs:
       - data/training/2015_2024_statcast_train.parquet
   train:
-    cmd: python3 src/train.py data/training/2015_2024_statcast_train.parquet
+    cmd: python3 src/train.py
     deps:
       - data/training/2015_2024_statcast_train.parquet
       - src/lstm_model.py
@@ -27,3 +27,5 @@ stages:
     deps:
       - data/evaluate/pitcher_data.pickle
       - src/evaluate.py
+    outs:
+      - data/outputs/

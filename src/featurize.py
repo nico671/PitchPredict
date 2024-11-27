@@ -23,23 +23,32 @@ def next_pitch(player):
 
 
 def main():
-    if len(sys.argv) != 2:
+    # check for correct input length
+    if len(sys.argv) != 1:
         logger.error("Arguments error. Usage:\n")
-        logger.error("not enough inputs, expected input structure is: *.py *.parquet")
+        logger.error("not enough inputs, expected input structure is: *.py")
+        sys.exit(1)
+    # check for correct input file types
+    elif ".py" not in sys.argv[0]:
+        logger.error(
+            "Please enter a valid python source file as the first input for this stage"
+        )
         sys.exit(1)
 
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
+    input_file_path = params["clean"]["input_data_path"]
 
-    input_file_path = params["featurize"]["input_data_path"]
     df = pd.read_parquet(Path(input_file_path))
     logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
 
     logger.info("Creating target column")
 
-    df = df.groupby(["player_name"]).apply(
-        lambda gdf: gdf.assign(
-            next_pitch=lambda df: df["pitch_type"].shift(-1), include_groups=False
+    df = (
+        df.set_index("Unnamed: 0")
+        .groupby("player_name")
+        .apply(
+            lambda x: x.assign(next_pitch=x["pitch_type"].shift(-1)),
         )
     )
 
@@ -58,6 +67,8 @@ def main():
 
     logger.info("Converting needing columns to categorical to work with lstm")
     df["stand"] = df["stand"].astype("category").cat.codes
+    # Create necessary features
+
     df["count"] = df["balls"].astype(str) + "-" + df["strikes"].astype(str)
     df["count"] = df["count"].astype("category").cat.codes
     df["on_1b"] = df["on_1b"].notnull().astype(int)
@@ -72,9 +83,7 @@ def main():
     )
     df["outs_when_up"] = df["outs_when_up"].astype(int)
     df["inning"] = df["inning"].astype(int)
-    del df[
-        "balls"
-    ]  # remove balls and strikes which are useless since we already have count
+    del df["balls"]
     del df["strikes"]
 
     df["run_diff"] = df["bat_score"] - df["fld_score"]  # run difference
@@ -88,37 +97,79 @@ def main():
 
     # Pitcher tendencies
     df["cumulative_pitch_count"] = df.groupby(["game_date", "pitcher"]).cumcount() + 1
-    df["is_high_pressure"] = (
-        ((df["inning"] >= 7) & (abs(df["run_diff"]) <= 3))
-    ).astype(int)
-
-    features = []
-    features_path = Path(params["featurize"]["features_path"])
-    with open(features_path, "r") as f:
-        for item in f.readlines():
-            features.append(item.strip())
-
+    df["is_high_pressure"] = ((df["inning"] >= 7) & (abs(df["run_diff"]) <= 3)).astype(
+        int
+    )
     df["is_tied"] = (df["run_diff"] == 0).astype(int)
     df["is_leading"] = (df["run_diff"] > 0).astype(int)
     df["is_trailing"] = (df["run_diff"] < 0).astype(int)
     df["pitcher_game_pitch_count"] = df.groupby(["game_date", "pitcher"]).cumcount() + 1
     df["spin_rate"] = df["release_spin_rate"].astype(float).fillna(-1)
-    df["next_pitch"] = df["next_pitch"].astype("str")
+
+    # Define features list
+    features = [
+        "stand",
+        "is_high_pressure",
+        "zone",
+        "cumulative_pitch_count",
+        "count",
+        "inning_topbot",
+        "if_fielding_alignment",
+        "of_fielding_alignment",
+        "at_bat_number",
+        "pitch_number",
+        "run_diff",
+        "base_state",
+        "release_speed",
+        "release_pos_x",
+        "release_pos_z",
+        "pfx_x",
+        "pfx_z",
+        "plate_x",
+        "plate_z",
+        "outs_when_up",
+        "inning",
+        "hc_x",
+        "hc_y",
+        "vx0",
+        "vy0",
+        "vz0",
+        "ax",
+        "ay",
+        "az",
+        "hit_distance_sc",
+        "launch_speed",
+        "launch_angle",
+        "effective_speed",
+        "release_spin_rate",
+        "release_extension",
+        "release_pos_y",
+        "estimated_woba_using_speedangle",
+        "woba_value",
+        "woba_denom",
+        "babip_value",
+        "iso_value",
+        "launch_speed_angle",
+        "spin_axis",
+        "delta_run_exp",
+        "is_tied",
+        "is_leading",
+        "is_trailing",
+        "pitcher_game_pitch_count",
+        "spin_rate",
+    ]
 
     logger.info(f"Features: {features}")
     logger.info(f"Shape is now: {df.shape[0]} rows and {df.shape[1]} columns")
-    df = df.fillna(-1)
 
     # Fill NaN values if necessary
     df = df.fillna(-1).infer_objects(copy=False)
     # Create the output DataFrame
     output_df = df[features + ["next_pitch", "pitcher", "player_name", "game_date"]]
-    # Drop duplicated columns
-    output_df = output_df.loc[:, ~output_df.columns.duplicated()]
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
-
+    logger.info(output_dir / "2015_2024_statcast_train.parquet")
     # Write to Parquet file
     output_df.to_parquet(output_dir / "2015_2024_statcast_train.parquet")
 
