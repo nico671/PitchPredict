@@ -51,11 +51,16 @@ def main():
     top_pitchers = df["pitcher"].value_counts().nlargest(num_pitchers).index
     df = df[df["pitcher"].isin(top_pitchers)]
 
-    logger.info(f"Shape is now: {df.shape[0]} rows and {df.shape[1]} columns")
+    min_pitches = params["clean"]["min_pitches"]
+    # filter out pitchers with less than min_pitches
+    pitcher_counts = df["pitcher"].value_counts()
+    df = df[df["pitcher"].isin(pitcher_counts[pitcher_counts > min_pitches].index)]
 
     # drop duplicate rows
     df = df.drop_duplicates(keep="first")
-    # output the resulting file
+    logger.info(f"Shape is now: {df.shape[0]} rows and {df.shape[1]} columns")
+
+    # output the to featurization pq file
     output_dir = Path("data/cleaned")
     output_dir.mkdir(parents=True, exist_ok=True)
     df.to_parquet(output_dir / "2015_2024_statcast_clean.parquet")

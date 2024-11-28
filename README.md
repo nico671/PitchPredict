@@ -1,25 +1,19 @@
 # PitchPredict
 
+This project is a ML pipeline that predicts the next pitch type that a pitcher will throw based on a sequence of previous pitches. The pipeline is built using the following steps:
+
 README TOC:
 
 - [Code Overview](#code-overview)
-  - [Data Collection](#data-collection)
-  - [Data Cleaning](#data-cleaning)
-  - [Feature Engineering](#feature-engineering)
-  - [Model Training](#model-training)
-  - [Model Evaluation](#model-evaluation)
+  1. [Data Collection](#data-collection)
+  2. [Data Cleaning](#data-cleaning)
+  3. [Feature Engineering](#feature-engineering)
+  4. [Model Training](#model-training)
+  5. [Model Evaluation](#model-evaluation)
 - [Experiment Results](#experiment-results)
 - [Next Steps](#next-steps)
 
 ## Code Overview
-
-This project is a ML pipeline that predicts the next pitch type that a pitcher will throw based on a sequence of previous pitches. The pipeline is built using the following steps:
-
-1. [Data Collection](#data-collection)
-2. [Data Cleaning](#data-cleaning)
-3. [Feature Engineering](#feature-engineering)
-4. [Model Training](#model-training)
-5. [Model Evaluation](#model-evaluation)
 
 ### Data Collection
 

@@ -37,18 +37,15 @@ def main():
 
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
-    input_file_path = params["clean"]["input_data_path"]
+    input_file_path = params["featurize"]["input_data_path"]
 
     df = pd.read_parquet(Path(input_file_path))
     logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
 
     logger.info("Creating target column")
-
-    df = (
-        df.set_index("Unnamed: 0")
-        .groupby("player_name")
-        .apply(
-            lambda x: x.assign(next_pitch=x["pitch_type"].shift(-1)),
+    df = df.groupby(["player_name"]).apply(
+        lambda gdf: gdf.assign(
+            next_pitch=lambda df: df["pitch_type"].shift(-1), include_groups=False
         )
     )
 
@@ -91,8 +88,8 @@ def main():
     del df["fld_score"]  # remove field score
     df["base_state"] = (
         df["on_1b"].astype(int)
-        + 2 * df["on_2b"].astype(int)
-        + 4 * df["on_3b"].astype(int)
+        + 3 * df["on_2b"].astype(int)
+        + 5 * df["on_3b"].astype(int)
     )
 
     # Pitcher tendencies
@@ -106,62 +103,80 @@ def main():
     df["pitcher_game_pitch_count"] = df.groupby(["game_date", "pitcher"]).cumcount() + 1
     df["spin_rate"] = df["release_spin_rate"].astype(float).fillna(-1)
 
-    # Define features list
-    features = [
-        "stand",
-        "is_high_pressure",
-        "zone",
-        "cumulative_pitch_count",
-        "count",
-        "inning_topbot",
-        "if_fielding_alignment",
-        "of_fielding_alignment",
-        "at_bat_number",
-        "pitch_number",
-        "run_diff",
-        "base_state",
-        "release_speed",
-        "release_pos_x",
-        "release_pos_z",
-        "pfx_x",
-        "pfx_z",
-        "plate_x",
-        "plate_z",
-        "outs_when_up",
-        "inning",
-        "hc_x",
-        "hc_y",
-        "vx0",
-        "vy0",
-        "vz0",
-        "ax",
-        "ay",
-        "az",
-        "hit_distance_sc",
-        "launch_speed",
-        "launch_angle",
-        "effective_speed",
-        "release_spin_rate",
-        "release_extension",
-        "release_pos_y",
-        "estimated_woba_using_speedangle",
-        "woba_value",
-        "woba_denom",
-        "babip_value",
-        "iso_value",
-        "launch_speed_angle",
-        "spin_axis",
-        "delta_run_exp",
-        "is_tied",
-        "is_leading",
-        "is_trailing",
-        "pitcher_game_pitch_count",
-        "spin_rate",
-    ]
+    # # Define features list
+    # features = [
+    #     "stand",
+    #     "is_high_pressure",
+    #     "zone",
+    #     "cumulative_pitch_count",
+    #     "count",
+    #     "inning_topbot",
+    #     "if_fielding_alignment",
+    #     "of_fielding_alignment",
+    #     "at_bat_number",
+    #     "pitch_number",
+    #     "run_diff",
+    #     "base_state",
+    #     "release_speed",
+    #     "release_pos_x",
+    #     "release_pos_z",
+    #     "pfx_x",
+    #     "pfx_z",
+    #     "plate_x",
+    #     "plate_z",
+    #     "outs_when_up",
+    #     "inning",
+    #     "hc_x",
+    #     "hc_y",
+    #     "vx0",
+    #     "vy0",
+    #     "vz0",
+    #     "ax",
+    #     "ay",
+    #     "az",
+    #     "hit_distance_sc",
+    #     "launch_speed",
+    #     "launch_angle",
+    #     "effective_speed",
+    #     "release_spin_rate",
+    #     "release_extension",
+    #     "release_pos_y",
+    #     "estimated_woba_using_speedangle",
+    #     "woba_value",
+    #     "woba_denom",
+    #     "babip_value",
+    #     "iso_value",
+    #     "launch_speed_angle",
+    #     "spin_axis",
+    #     "delta_run_exp",
+    #     "is_tied",
+    #     "is_leading",
+    #     "is_trailing",
+    #     "pitcher_game_pitch_count",
+    #     "spin_rate",
+    #     "is_high_pressure",
+    #     "cumulative_pitch_count",
+    #     "count",
+    #     "run_diff",
+    #     "base_state",
+    #     "is_tied",
+    #     "is_leading",
+    #     "is_trailing",
+    #     "pitcher_game_pitch_count",
+    #     "spin_rate",
+    # ]
+    # features = list(set(features))
+    features = []
+    features_path = Path(params["train"]["features_path"])
+    with open(features_path, "r") as f:
+        for item in f.readlines():
+            features.append(item.strip())
 
     logger.info(f"Features: {features}")
     logger.info(f"Shape is now: {df.shape[0]} rows and {df.shape[1]} columns")
 
+    df["next_pitch"] = df["next_pitch"].astype(str)
+    df["pitch_type"] = df["pitch_type"].astype(str)
     # Fill NaN values if necessary
     df = df.fillna(-1).infer_objects(copy=False)
     # Create the output DataFrame

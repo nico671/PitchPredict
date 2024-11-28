@@ -45,14 +45,9 @@ def main():
             f'Most common pitch rate: {pitcher_data[pitcher]["most_common_pitch_rate"]:.4f}'
         )
         logger.info(
-            f"Average Performance Gained over just guessing the most common pitch: {pitcher_data[pitcher]['test_accuracy'] - pitcher_data[pitcher]['most_common_pitch_rate']:.4f}"
+            f"Average Performance Gained over just guessing the most common pitch: {pitcher_data[pitcher]['performance_gain']:.2f}"
         )
-        accuracy_diff.append(
-            (
-                pitcher_data[pitcher]["test_accuracy"]
-                - pitcher_data[pitcher]["most_common_pitch_rate"]
-            )
-        )
+        accuracy_diff.append(pitcher_data[pitcher]["performance_gain"])
         accuracy.append(pitcher_data[pitcher]["test_accuracy"])
         plt.plot(pitcher_data[pitcher]["history"].history["loss"])
         plt.plot(pitcher_data[pitcher]["history"].history["val_loss"])

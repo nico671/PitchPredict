@@ -100,66 +100,68 @@ def training_loop(df, params):
     pitcher_data = {}
     count = 0
     logger.info(f"Number of pitchers: {len(df["pitcher"].unique())}")
-    features = [
-        "stand",
-        "is_high_pressure",
-        "zone",
-        "cumulative_pitch_count",
-        "count",
-        "inning_topbot",
-        "if_fielding_alignment",
-        "of_fielding_alignment",
-        "at_bat_number",
-        "pitch_number",
-        "run_diff",
-        "base_state",
-        "release_speed",
-        "release_pos_x",
-        "release_pos_z",
-        "pfx_x",
-        "pfx_z",
-        "plate_x",
-        "plate_z",
-        "outs_when_up",
-        "inning",
-        "hc_x",
-        "hc_y",
-        "vx0",
-        "vy0",
-        "vz0",
-        "ax",
-        "ay",
-        "az",
-        "hit_distance_sc",
-        "launch_speed",
-        "launch_angle",
-        "effective_speed",
-        "release_spin_rate",
-        "release_extension",
-        "release_pos_y",
-        "estimated_woba_using_speedangle",
-        "woba_value",
-        "woba_denom",
-        "babip_value",
-        "iso_value",
-        "launch_speed_angle",
-        "spin_axis",
-        "delta_run_exp",
-        "is_tied",
-        "is_leading",
-        "is_trailing",
-        "pitcher_game_pitch_count",
-        "spin_rate",
-    ]
-    # features_path = Path(params["train"]["features_path"])
-    # with open(features_path, "r") as f:
-    #     for item in f.readlines():
-    #         features.append(item.strip())
+    # features = [
+    #     "stand",
+    #     "is_high_pressure",
+    #     "zone",
+    #     "cumulative_pitch_count",
+    #     "count",
+    #     "inning_topbot",
+    #     "if_fielding_alignment",
+    #     "of_fielding_alignment",
+    #     "at_bat_number",
+    #     "pitch_number",
+    #     "run_diff",
+    #     "base_state",
+    #     "release_speed",
+    #     "release_pos_x",
+    #     "release_pos_z",
+    #     "pfx_x",
+    #     "pfx_z",
+    #     "plate_x",
+    #     "plate_z",
+    #     "outs_when_up",
+    #     "inning",
+    #     "hc_x",
+    #     "hc_y",
+    #     "vx0",
+    #     "vy0",
+    #     "vz0",
+    #     "ax",
+    #     "ay",
+    #     "az",
+    #     "hit_distance_sc",
+    #     "launch_speed",
+    #     "launch_angle",
+    #     "effective_speed",
+    #     "release_spin_rate",
+    #     "release_extension",
+    #     "release_pos_y",
+    #     "estimated_woba_using_speedangle",
+    #     "woba_value",
+    #     "woba_denom",
+    #     "babip_value",
+    #     "iso_value",
+    #     "launch_speed_angle",
+    #     "spin_axis",
+    #     "delta_run_exp",
+    #     "is_tied",
+    #     "is_leading",
+    #     "is_trailing",
+    #     "pitcher_game_pitch_count",
+    #     "spin_rate",
+    # ]
+    features = []
+    features_path = Path(params["train"]["features_path"])
+    with open(features_path, "r") as f:
+        for item in f.readlines():
+            features.append(item.strip())
 
     for pitcher in df["pitcher"].unique():
         logger.info(
             f"Training model for pitcher: {df[df['pitcher'] == pitcher]['player_name'].iloc[0]}"
         )
+        logger.info(f"{len(df[df['pitcher'] == pitcher])} pitches")
         pitcher_df = df[df["pitcher"] == pitcher]
         X_train, y_train, X_val, y_val, X_test, y_test, label_encoder, class_weight = (
             create_training_data(pitcher_df, pitcher, features)
@@ -193,10 +195,25 @@ def training_loop(df, params):
             .sort_values(ascending=False)
             .iloc[0]
             / len(pitcher_df),
+            "performance_gain": (
+                test_accuracy
+                - pitcher_df["next_pitch"]
+                .value_counts()
+                .sort_values(ascending=False)
+                .iloc[0]
+                / len(pitcher_df)
+            )
+            * 100,
         }
-        logger.info(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}")
+        logger.info(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}")
         logger.info(
             f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data])}"
+        )
+        logger.info(
+            f"Accuracy Gained over guessing most common pitch: {(
+                test_accuracy - pitcher_data[pitcher]["most_common_pitch_rate"]
+            )
+            * 100:.2f}%"
         )
         count += 1
         logger.info(
@@ -214,7 +231,7 @@ def main():
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
 
-    input_file_path = params["featurize"]["input_data_path"]
+    input_file_path = params["train"]["input_data_path"]
     df = pd.read_parquet(Path(input_file_path))
     logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
     pitcher_data = training_loop(df, params)
