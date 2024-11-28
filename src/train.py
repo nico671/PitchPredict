@@ -3,12 +3,14 @@ import os
 import pickle
 import sys
 from pathlib import Path
+from statistics import mean
+
+import numpy as np
 import pandas as pd
+import yaml
 from sklearn.calibration import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
-from statistics import mean
-import numpy as np
-import yaml
+
 from lstm_model import (
     calculate_class_weights,
     compile_and_fit,
@@ -99,58 +101,7 @@ def create_training_data(df, pitcher, features):
 def training_loop(df, params):
     pitcher_data = {}
     count = 0
-    logger.info(f"Number of pitchers: {len(df["pitcher"].unique())}")
-    # features = [
-    #     "stand",
-    #     "is_high_pressure",
-    #     "zone",
-    #     "cumulative_pitch_count",
-    #     "count",
-    #     "inning_topbot",
-    #     "if_fielding_alignment",
-    #     "of_fielding_alignment",
-    #     "at_bat_number",
-    #     "pitch_number",
-    #     "run_diff",
-    #     "base_state",
-    #     "release_speed",
-    #     "release_pos_x",
-    #     "release_pos_z",
-    #     "pfx_x",
-    #     "pfx_z",
-    #     "plate_x",
-    #     "plate_z",
-    #     "outs_when_up",
-    #     "inning",
-    #     "hc_x",
-    #     "hc_y",
-    #     "vx0",
-    #     "vy0",
-    #     "vz0",
-    #     "ax",
-    #     "ay",
-    #     "az",
-    #     "hit_distance_sc",
-    #     "launch_speed",
-    #     "launch_angle",
-    #     "effective_speed",
-    #     "release_spin_rate",
-    #     "release_extension",
-    #     "release_pos_y",
-    #     "estimated_woba_using_speedangle",
-    #     "woba_value",
-    #     "woba_denom",
-    #     "babip_value",
-    #     "iso_value",
-    #     "launch_speed_angle",
-    #     "spin_axis",
-    #     "delta_run_exp",
-    #     "is_tied",
-    #     "is_leading",
-    #     "is_trailing",
-    #     "pitcher_game_pitch_count",
-    #     "spin_rate",
-    # ]
+    logger.info("Number of pitchers: %d", len(df["pitcher"].unique()))
     features = []
     features_path = Path(params["train"]["features_path"])
     with open(features_path, "r") as f:
@@ -210,10 +161,11 @@ def training_loop(df, params):
             f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data])}"
         )
         logger.info(
-            f"Accuracy Gained over guessing most common pitch: {(
-                test_accuracy - pitcher_data[pitcher]["most_common_pitch_rate"]
-            )
-            * 100:.2f}%"
+            "Accuracy Gained over guessing most common pitch: %",
+            (test_accuracy - pitcher_data[pitcher]["most_common_pitch_rate"]) * 100,
+        )
+        logger.info(
+            f"Performance Gained over guessing most common pitch: {mean([pitcher_data[pitcher]['performance_gain'] for pitcher in pitcher_data]):.2f}%"
         )
         count += 1
         logger.info(

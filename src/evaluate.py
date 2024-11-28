@@ -1,15 +1,15 @@
 import logging
 import os
-from pathlib import Path
 import pickle
-from statistics import mean
 import sys
-import seaborn as sns
-from matplotlib import pyplot as plt
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
-import tensorflow as tf
+from pathlib import Path
+from statistics import mean
 
+import numpy as np
+import seaborn as sns
+import tensorflow as tf
+from matplotlib import pyplot as plt
+from sklearn.preprocessing import LabelEncoder
 
 logger = logging.getLogger("evaluate")
 logger.setLevel(logging.INFO)
@@ -145,6 +145,23 @@ def main():
             )
         )
         plt.close()
+
+    sns.scatterplot(
+        x=[pitcher_data[pitcher]["total_pitches"] for pitcher in pitcher_data],
+        y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
+        label="True",
+    )
+    plt.title("Performance Gain vs number of pitchers")
+    plt.xlabel("Pitcher")
+    plt.ylabel("Performance Gain")
+    output_dir = Path("data/outputs/performance_gain/")
+    if os.path.isfile(os.path.join(output_dir, "performance_gain.png")):
+        os.remove(
+            os.path.join(output_dir, "performance_gain.png")
+        )  # Opt.: os.system("rm "+strFile)
+    os.makedirs(output_dir, exist_ok=True)
+    plt.savefig(os.path.join(output_dir, "performance_gain.png"))
+    plt.close()
     if len(accuracy_diff) > 1:
         logger.info(
             f"Average Performance Gained over just guessing the most common pitch across all pitchers: {mean(accuracy_diff):.4f}",

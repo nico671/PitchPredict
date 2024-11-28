@@ -11,3 +11,8 @@ best_model.keras
 src/__pycache__/
 README_files/
 notebooks/old/
+.python-version
+.ruff_cache
+.dvc/
+.venv/
+uv.lock

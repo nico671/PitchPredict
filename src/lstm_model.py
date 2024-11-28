@@ -1,8 +1,14 @@
-import tensorflow as tf
-import numpy as np
+from pathlib import Path
 
-DROPOUT = 0.1
-PATIENCE = 3
+import numpy as np
+import tensorflow as tf
+import yaml
+
+params = Path("params.yaml")
+with open(params, "r") as file:
+    params = yaml.safe_load(file)
+DROPOUT = params["train"]["dropout"]
+PATIENCE = params["train"]["patience"]
 
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, class_weight):

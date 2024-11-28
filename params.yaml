@@ -1,8 +1,8 @@
 clean:
   input_data_path: data/raw/2015_2024_statcast.parquet
-  num_pitchers: 5
+  num_pitchers: 20
   start_year: 2023
-  min_pitches: 3000
+  min_pitches: 5000
 featurize:
   input_data_path: data/cleaned/2015_2024_statcast_clean.parquet
   features_path: data/full_features.txt
@@ -10,4 +10,4 @@ train:
   input_data_path: data/training/2015_2024_statcast_train.parquet
   features_path: data/full_features.txt
   dropout: .1
-  patience: 5
+  patience: 3

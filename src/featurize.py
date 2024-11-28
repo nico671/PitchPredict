@@ -1,6 +1,7 @@
 import logging
 import sys
 from pathlib import Path
+
 import pandas as pd
 import yaml
 
@@ -103,69 +104,6 @@ def main():
     df["pitcher_game_pitch_count"] = df.groupby(["game_date", "pitcher"]).cumcount() + 1
     df["spin_rate"] = df["release_spin_rate"].astype(float).fillna(-1)
 
-    # # Define features list
-    # features = [
-    #     "stand",
-    #     "is_high_pressure",
-    #     "zone",
-    #     "cumulative_pitch_count",
-    #     "count",
-    #     "inning_topbot",
-    #     "if_fielding_alignment",
-    #     "of_fielding_alignment",
-    #     "at_bat_number",
-    #     "pitch_number",
-    #     "run_diff",
-    #     "base_state",
-    #     "release_speed",
-    #     "release_pos_x",
-    #     "release_pos_z",
-    #     "pfx_x",
-    #     "pfx_z",
-    #     "plate_x",
-    #     "plate_z",
-    #     "outs_when_up",
-    #     "inning",
-    #     "hc_x",
-    #     "hc_y",
-    #     "vx0",
-    #     "vy0",
-    #     "vz0",
-    #     "ax",
-    #     "ay",
-    #     "az",
-    #     "hit_distance_sc",
-    #     "launch_speed",
-    #     "launch_angle",
-    #     "effective_speed",
-    #     "release_spin_rate",
-    #     "release_extension",
-    #     "release_pos_y",
-    #     "estimated_woba_using_speedangle",
-    #     "woba_value",
-    #     "woba_denom",
-    #     "babip_value",
-    #     "iso_value",
-    #     "launch_speed_angle",
-    #     "spin_axis",
-    #     "delta_run_exp",
-    #     "is_tied",
-    #     "is_leading",
-    #     "is_trailing",
-    #     "pitcher_game_pitch_count",
-    #     "spin_rate",
-    #     "is_high_pressure",
-    #     "cumulative_pitch_count",
-    #     "count",
-    #     "run_diff",
-    #     "base_state",
-    #     "is_tied",
-    #     "is_leading",
-    #     "is_trailing",
-    #     "pitcher_game_pitch_count",
-    #     "spin_rate",
-    # ]
-    # features = list(set(features))
     features = []
     features_path = Path(params["train"]["features_path"])
     with open(features_path, "r") as f:
