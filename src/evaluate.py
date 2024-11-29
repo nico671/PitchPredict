@@ -146,27 +146,44 @@ def main():
         )
         plt.close()
 
-    sns.scatterplot(
+    sns.regplot(
         x=[pitcher_data[pitcher]["total_pitches"] for pitcher in pitcher_data],
         y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
-        label="True",
     )
     plt.title("Performance Gain vs number of pitchers")
     plt.xlabel("Pitcher")
     plt.ylabel("Performance Gain")
     output_dir = Path("data/outputs/performance_gain/")
-    if os.path.isfile(os.path.join(output_dir, "performance_gain.png")):
+    if os.path.isfile(os.path.join(output_dir, "performance_gain_total_pitches.png")):
         os.remove(
-            os.path.join(output_dir, "performance_gain.png")
+            os.path.join(output_dir, "performance_gain_total_pitches.png")
         )  # Opt.: os.system("rm "+strFile)
     os.makedirs(output_dir, exist_ok=True)
-    plt.savefig(os.path.join(output_dir, "performance_gain.png"))
+    plt.savefig(os.path.join(output_dir, "performance_gain_total_pitches.png"))
     plt.close()
+
+    sns.swarmplot(
+        x=[pitcher_data[pitcher]["unique_classes"] for pitcher in pitcher_data],
+        y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
+        orient="v",
+    )
+    plt.title("Performance Gain vs number of pitches")
+    plt.xlabel("Pitcher")
+    plt.ylabel("Performance Gain")
+    output_dir = Path("data/outputs/performance_gain/")
+    if os.path.isfile(os.path.join(output_dir, "performance_gain_unique_pitches.png")):
+        os.remove(
+            os.path.join(output_dir, "performance_gain_unique_pitches.png")
+        )  # Opt.: os.system("rm "+strFile)
+    os.makedirs(output_dir, exist_ok=True)
+    plt.savefig(os.path.join(output_dir, "performance_gain_unique_pitches.png"))
+    plt.close()
+
     if len(accuracy_diff) > 1:
         logger.info(
-            f"Average Performance Gained over just guessing the most common pitch across all pitchers: {mean(accuracy_diff):.4f}",
+            f"Average Performance Gained over just guessing the most common pitch across all pitchers: {mean(accuracy_diff):.2f}",
         )
-    logger.info(f"Average Test Accuracy across all pitchers: {mean(accuracy):.4f}")
+    logger.info(f"Average Test Accuracy across all pitchers: {mean(accuracy):.2f}")
 
 
 if __name__ == "__main__":

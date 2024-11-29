@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import sys
+import time
 from pathlib import Path
 from statistics import mean
 
@@ -107,7 +108,7 @@ def training_loop(df, params):
     with open(features_path, "r") as f:
         for item in f.readlines():
             features.append(item.strip())
-
+    start_time = time.time()
     for pitcher in df["pitcher"].unique():
         logger.info(
             f"Training model for pitcher: {df[df['pitcher'] == pitcher]['player_name'].iloc[0]}"
@@ -158,19 +159,22 @@ def training_loop(df, params):
         }
         logger.info(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}")
         logger.info(
-            f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data])}"
+            f" Accuracy Gained over guessing most common pitch for {pitcher_data[pitcher]['player_name']}: {((test_accuracy - pitcher_data[pitcher]["most_common_pitch_rate"]) * 100):.2f}%",
         )
         logger.info(
-            "Accuracy Gained over guessing most common pitch: %",
-            (test_accuracy - pitcher_data[pitcher]["most_common_pitch_rate"]) * 100,
+            f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data])*100:.2f}%"
         )
+
         logger.info(
-            f"Performance Gained over guessing most common pitch: {mean([pitcher_data[pitcher]['performance_gain'] for pitcher in pitcher_data]):.2f}%"
+            f"Average Performance Gained over guessing most common pitch: {mean([pitcher_data[pitcher]['performance_gain'] for pitcher in pitcher_data]):.2f}%"
         )
+
         count += 1
         logger.info(
             f'{count} of {len(df["pitcher"].unique())}, {count/len(df["pitcher"].unique()) * 100:.2f}% done!'
         )
+    end_time = time.time()
+    logger.info(f"Training took {end_time - start_time} seconds")
     return pitcher_data
 
 

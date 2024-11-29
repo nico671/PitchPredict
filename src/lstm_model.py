@@ -39,7 +39,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, class_weight):
         X_train,
         y_train,
         validation_data=(X_val, y_val),
-        epochs=30,  # early stopping typically occurs around 20 anyways
+        epochs=50,  # early stopping typically occurs around 20 anyways
         batch_size=16,
         callbacks=callbacks,
         # class_weight=class_weight, # hurts performance
@@ -53,7 +53,7 @@ def create_model(input_shape, num_classes):
     model.add(tf.keras.layers.InputLayer(shape=input_shape))
     model.add(
         tf.keras.layers.LSTM(
-            256,
+            128,
             return_sequences=True,
             dropout=DROPOUT,
             kernel_regularizer=tf.keras.regularizers.l2(0.01),
