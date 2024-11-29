@@ -9,8 +9,8 @@ stages:
       size: 631521449
     - path: params.yaml
       hash: md5
-      md5: 8559f4ac2df195e6dc8055727f4f5750
-      size: 377
+      md5: 561c0fa63ce339a591ea8a972b6e595d
+      size: 382
     - path: src/clean.py
       hash: md5
       md5: cbfe9e9265fa7e7abe9e55f5265cbd2e
@@ -18,8 +18,8 @@ stages:
     outs:
     - path: data/cleaned/2015_2024_statcast_clean.parquet
       hash: md5
-      md5: 322bce31da2a6f8e16ec876e33569826
-      size: 13988390
+      md5: e31b1bb77b6bca94b83c5ea8e2247c29
+      size: 9920106
   data_split:
     cmd: python3 src/data_split.py data/cleaned/2015_2024_statcast_clean.parquet
     deps:
@@ -36,28 +36,28 @@ stages:
     deps:
     - path: data/training/2015_2024_statcast_train.parquet
       hash: md5
-      md5: 3f68b375a98457027eeedb5d566c30c8
-      size: 1853906
+      md5: 3652d53f37120f04b27f970d0b8242d9
+      size: 7620702
     - path: src/lstm_model.py
       hash: md5
-      md5: 3eaf631aac696f646c9b2a55766f5099
+      md5: f885a4105b766153a3a6cad840fbde37
       size: 2579
     - path: src/train.py
       hash: md5
-      md5: c1adc3c2a9776df52da330ddd0fdee88
-      size: 8417
+      md5: 8f5c8949ebe54b374dfa2568694aa632
+      size: 7337
     outs:
     - path: data/evaluate/pitcher_data.pickle
       hash: md5
-      md5: 36ac2966e816764490f7d3d83fc853fc
-      size: 35527013
+      md5: 9037abf4436e5e3b50c1959d8d945e3b
+      size: 153528435
   featurize:
     cmd: python3 src/featurize.py
     deps:
     - path: data/cleaned/2015_2024_statcast_clean.parquet
       hash: md5
-      md5: 322bce31da2a6f8e16ec876e33569826
-      size: 13988390
+      md5: e31b1bb77b6bca94b83c5ea8e2247c29
+      size: 9920106
     - path: src/featurize.py
       hash: md5
       md5: 3a7a795c5cd3c5cb99db86ae1caf33c3
@@ -65,22 +65,22 @@ stages:
     outs:
     - path: data/training/2015_2024_statcast_train.parquet
       hash: md5
-      md5: 816480666305a46706d8396bec884bd6
-      size: 11109894
+      md5: 3652d53f37120f04b27f970d0b8242d9
+      size: 7620702
   evaluate:
     cmd: python3 src/evaluate.py data/evaluate/pitcher_data.pickle
     deps:
     - path: data/evaluate/pitcher_data.pickle
       hash: md5
-      md5: 36ac2966e816764490f7d3d83fc853fc
-      size: 35527013
+      md5: 9037abf4436e5e3b50c1959d8d945e3b
+      size: 153528435
     - path: src/evaluate.py
       hash: md5
-      md5: 0cba5c75a3e8352a3ea1f10ce264adc9
-      size: 6320
+      md5: 2e6272f5f5c701a09a40e7549cf6db4a
+      size: 7086
     outs:
     - path: data/outputs/
       hash: md5
-      md5: 5a27ef36b95208320dd614f28d521f8e.dir
-      size: 313893
-      nfiles: 10
+      md5: d84d0c61675dbc67b085d6bfcff78a1e.dir
+      size: 2716765
+      nfiles: 83
