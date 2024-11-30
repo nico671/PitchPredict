@@ -1,8 +1,9 @@
 import logging
 import sys
+import time
 from pathlib import Path
 
-import pandas as pd
+import polars as pl
 import yaml
 
 logger = logging.getLogger("mr. cleannnnn")
@@ -15,6 +16,7 @@ logger.addHandler(handler)
 
 
 def main():
+    start_time = time.time()
     # check for correct input length
     if len(sys.argv) != 1:
         logger.error("Arguments error. Usage:\n")
@@ -31,41 +33,36 @@ def main():
     input_file_path = params["clean"]["input_data_path"]
 
     # read in the complete data frame
-    df = pd.read_parquet(Path(input_file_path))
+    df = pl.read_parquet(input_file_path)
+
+    df = df.with_columns(pl.col("game_date").str.to_datetime())
+    df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
+
+    df.filter(pl.col("pitcher").is_not_null())
+
+    # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
+    pitcher_counts = df.group_by("pitcher").count().sort("count", descending=True)
+    top_k_pitchers = pitcher_counts.head(params["clean"]["num_pitchers"])["pitcher"]
+    df = df.filter(pl.col("pitcher").is_in(top_k_pitchers))
+
     # check that dataframe is not empty
-    if df.empty:
-        logger.error("Dataframe is empty, please check the input file")
+    if df.is_empty():
+        logger.error("Dataframe is empty")
         sys.exit(1)
 
-    logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
-
-    # conversion of game_date to datetime
-    logger.info("Converting game_date to datetime")
-    df["game_date"] = pd.to_datetime(df["game_date"])
-
-    # filter out games before start_year
-    start_year = params["clean"]["start_year"]
-    df = df[df["game_date"].dt.year >= start_year]
-
-    num_pitchers = params["clean"]["num_pitchers"]
-    # get the n highest appearing pitchers
-    top_pitchers = df["pitcher"].value_counts().nlargest(num_pitchers).index
-    df = df[df["pitcher"].isin(top_pitchers)]
-
-    min_pitches = params["clean"]["min_pitches"]
-    # filter out pitchers with less than min_pitches
-    pitcher_counts = df["pitcher"].value_counts()
-    df = df[df["pitcher"].isin(pitcher_counts[pitcher_counts > min_pitches].index)]
+    logger.info(f"Num rows is {df.shape[0]}")
 
     # drop duplicate rows
-    df = df.drop_duplicates(keep="first")
-    logger.info(f"Shape is now: {df.shape[0]} rows and {df.shape[1]} columns")
+    df = df.unique(keep="first")
+    logger.info(f"Num rows is {df.shape[0]}")
 
     # output the to featurization pq file
     output_dir = Path("data/cleaned")
     output_dir.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(output_dir / "2015_2024_statcast_clean.parquet")
+    df.write_parquet(output_dir / "2015_2024_statcast_clean.parquet")
     logger.info("done")
+    end_time = time.time()
+    logger.info(f"Cleaning took {end_time - start_time} seconds")
 
 
 if __name__ == "__main__":

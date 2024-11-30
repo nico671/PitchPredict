@@ -34,6 +34,7 @@ def main():
     accuracy = []
     accuracy_diff = []
     for pitcher in pitcher_data:
+        print(pitcher_data[pitcher]["model"].metrics[0])
         logger.info(f'Pitcher: {pitcher_data[pitcher]["player_name"]}')
         logger.info(
             f'Test Loss: {pitcher_data[pitcher]["test_loss"]:.4f}, Test Accuracy: {pitcher_data[pitcher]["test_accuracy"]:.4f}'
@@ -146,9 +147,10 @@ def main():
         )
         plt.close()
 
-    sns.regplot(
+    sns.scatterplot(
         x=[pitcher_data[pitcher]["total_pitches"] for pitcher in pitcher_data],
         y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
+        # hue=[pitcher_data[pitcher]["player_name"] for pitcher in pitcher_data],
     )
     plt.title("Performance Gain vs number of pitchers")
     plt.xlabel("Pitcher")
@@ -166,6 +168,23 @@ def main():
         x=[pitcher_data[pitcher]["unique_classes"] for pitcher in pitcher_data],
         y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
         orient="v",
+        # hue=[pitcher_data[pitcher]["player_name"] for pitcher in pitcher_data],
+    )
+    plt.title("Performance Gain vs number of pitches")
+    plt.xlabel("Pitcher")
+    plt.ylabel("Performance Gain")
+    output_dir = Path("data/outputs/performance_gain/")
+    if os.path.isfile(os.path.join(output_dir, "performance_gain_unique_pitches.png")):
+        os.remove(
+            os.path.join(output_dir, "performance_gain_unique_pitches.png")
+        )  # Opt.: os.system("rm "+strFile)
+    os.makedirs(output_dir, exist_ok=True)
+    plt.savefig(os.path.join(output_dir, "performance_gain_unique_pitches.png"))
+    plt.close()
+
+    sns.boxplot(
+        x=[pitcher_data[pitcher]["unique_classes"] for pitcher in pitcher_data],
+        y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
     )
     plt.title("Performance Gain vs number of pitches")
     plt.xlabel("Pitcher")

@@ -44,7 +44,11 @@ def create_training_data(df, pitcher, features):
 
     # declare time steps
     # TODO: make this a parameter
-    time_steps = 25
+    params_path = Path("params.yaml")
+    with open(params_path, "r") as file:
+        params = yaml.safe_load(file)
+
+    time_steps = params["train"]["time_steps"]
 
     # sequence creation helper function
     def create_sequences(X, y, time_steps):
@@ -65,8 +69,9 @@ def create_training_data(df, pitcher, features):
     y_sequences = y_sequences.astype("int32")  # Ensure labels are integers
 
     # split into train, test, val
-    train_size = int(len(X_sequences) * 0.7)
-    val_size = int(len(X_sequences) * 0.15)
+    train_split = params["train"]["train_split"]
+    train_size = int(len(X_sequences) * train_split)
+    val_size = int(len(X_sequences) * (1 - train_split) / 2)
     X_train, X_val, X_test = np.split(X_sequences, [train_size, train_size + val_size])
     y_train, y_val, y_test = np.split(y_sequences, [train_size, train_size + val_size])
     class_weight = calculate_class_weights(y_train)
@@ -127,7 +132,12 @@ def training_loop(df, params):
         lstm_model = create_model(X_train.shape[1:], len(label_encoder.classes_))
 
         history = compile_and_fit(
-            lstm_model, X_train, y_train, X_val, y_val, class_weight
+            lstm_model,
+            X_train,
+            y_train,
+            X_val,
+            y_val,
+            pitcher_df["player_name"].iloc[0],
         )
 
         test_loss, test_accuracy = lstm_model.evaluate(X_test, y_test)

@@ -2,30 +2,36 @@ stages:
   clean:
     cmd: python3 src/clean.py
     deps:
-      - data/raw/2015_2024_statcast.parquet
-      - src/clean.py
-      - params.yaml
+    - data/raw/2015_2024_statcast.parquet
+    - src/clean.py
+    - params.yaml
     outs:
-      - data/cleaned/2015_2024_statcast_clean.parquet
+    - data/cleaned/2015_2024_statcast_clean.parquet
   featurize:
     cmd: python3 src/featurize.py
     deps:
-      - data/cleaned/2015_2024_statcast_clean.parquet
-      - src/featurize.py
+    - data/cleaned/2015_2024_statcast_clean.parquet
+    - src/featurize.py
     outs:
-      - data/training/2015_2024_statcast_train.parquet
+    - data/training/2015_2024_statcast_train.parquet
   train:
     cmd: python3 src/train.py
     deps:
-      - data/training/2015_2024_statcast_train.parquet
-      - src/lstm_model.py
-      - src/train.py
+    - data/training/2015_2024_statcast_train.parquet
+    - src/lstm_model.py
+    - src/train.py
     outs:
-      - data/evaluate/pitcher_data.pickle
+    - data/evaluate/pitcher_data.pickle
   evaluate:
     cmd: python3 src/evaluate.py data/evaluate/pitcher_data.pickle
     deps:
-      - data/evaluate/pitcher_data.pickle
-      - src/evaluate.py
+    - data/evaluate/pitcher_data.pickle
+    - src/evaluate.py
     outs:
-      - data/outputs/
+    - data/outputs/
+plots:
+- data/outputs/performance_gain
+- dvclive/Bibee, Tanner_logs/plots/metrics:
+    x: step
+metrics:
+- dvclive/Bibee, Tanner_logs/metrics.json
