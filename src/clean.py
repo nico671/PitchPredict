@@ -41,7 +41,7 @@ def main():
     df.filter(pl.col("pitcher").is_not_null())
 
     # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
-    pitcher_counts = df.group_by("pitcher").count().sort("count", descending=True)
+    pitcher_counts = df.group_by("pitcher").len().sort("len", descending=True)
     top_k_pitchers = pitcher_counts.head(params["clean"]["num_pitchers"])["pitcher"]
     df = df.filter(pl.col("pitcher").is_in(top_k_pitchers))
 

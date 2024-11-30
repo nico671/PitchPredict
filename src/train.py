@@ -43,7 +43,6 @@ def create_training_data(df, pitcher, features):
     y = y_encoded
 
     # declare time steps
-    # TODO: make this a parameter
     params_path = Path("params.yaml")
     with open(params_path, "r") as file:
         params = yaml.safe_load(file)

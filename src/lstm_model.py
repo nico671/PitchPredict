@@ -4,6 +4,9 @@ import numpy as np
 import tensorflow as tf
 import yaml
 
+from dvclive import Live
+from dvclive.keras import DVCLiveCallback
+
 params = Path("params.yaml")
 with open(params, "r") as file:
     params = yaml.safe_load(file)
@@ -40,7 +43,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
             patience=PATIENCE,
             min_lr=1e-6,
         ),
-        # DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
+        DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
 
     history = model.fit(
