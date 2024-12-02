@@ -78,8 +78,7 @@ def main():
 
     df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
 
-    df.filter(pl.col("pitcher").is_not_null())
-    df.filter(pl.col("pitch_type").is_not_null())
+    df = df.drop_nulls(subset=["pitch_type", "pitcher", "batter"])
 
     # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
     pitcher_counts = df.group_by("pitcher").len().sort("len", descending=True)
