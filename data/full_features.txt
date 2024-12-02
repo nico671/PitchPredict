@@ -1,7 +1,6 @@
 stand
 is_high_pressure
 zone
-cumulative_pitch_count
 count
 inning_topbot
 if_fielding_alignment

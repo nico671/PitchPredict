@@ -11,9 +11,9 @@ train:
   dropout: .1
   patience: 10
   kernel_regularizer: .01
-  batch_normalization: True
+  batch_normalization: true
   batch_size: 32
-  time_steps: 5
+  time_steps: 25
   train_split: .7
   epochs: 100
-  lstm_units: 128
+  lstm_units: 64

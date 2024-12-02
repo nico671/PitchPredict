@@ -1,7 +1,6 @@
 import logging
 import sys
 import time
-from pathlib import Path
 
 import polars as pl
 import yaml
@@ -33,34 +32,68 @@ def main():
     input_file_path = params["clean"]["input_data_path"]
 
     # read in the complete data frame
-    df = pl.read_parquet(input_file_path)
+    df = pl.scan_parquet(input_file_path)
 
     df = df.with_columns(pl.col("game_date").str.to_datetime())
     df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
 
+    df = df.drop(
+        [
+            "Unnamed: 0",
+            "spin_dir",
+            "spin_rate_deprecated",
+            "break_angle_deprecated",
+            "break_length_deprecated",
+            "game_type",
+            "home_team",
+            "away_team",
+            "des",
+            "description",
+            "game_year",
+            "tfs_deprecated",
+            "tfs_zulu_deprecated",
+            "fielder_2",
+            "umpire",
+            "sv_id",
+            "pitcher.1",
+            "fielder_2.1",
+            "fielder_3",
+            "fielder_4",
+            "fielder_5",
+            "fielder_6",
+            "fielder_7",
+            "fielder_8",
+            "fielder_9",
+            "pitch_name",
+            "home_score",
+            "away_score",
+            "post_away_score",
+            "post_home_score",
+            "post_bat_score",
+            "post_fld_score",
+            "delta_home_win_exp",
+            "delta_run_exp",
+        ]
+    )
+
+    df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
+
     df.filter(pl.col("pitcher").is_not_null())
+    df.filter(pl.col("pitch_type").is_not_null())
 
     # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
     pitcher_counts = df.group_by("pitcher").len().sort("len", descending=True)
-    top_k_pitchers = pitcher_counts.head(params["clean"]["num_pitchers"])["pitcher"]
-    df = df.filter(pl.col("pitcher").is_in(top_k_pitchers))
+    top_k_pitchers = pitcher_counts.head(params["clean"]["num_pitchers"]).select(
+        "pitcher"
+    )
 
-    # check that dataframe is not empty
-    if df.is_empty():
-        logger.error("Dataframe is empty")
-        sys.exit(1)
+    # Collect the 'pitcher' column into a list
+    top_k_pitchers_list = top_k_pitchers.collect().get_column("pitcher").to_list()
 
-    logger.info(f"Num rows is {df.shape[0]}")
+    # Now 'is_in' can use the list
+    df = df.filter(pl.col("pitcher").is_in(top_k_pitchers_list))
 
-    # drop duplicate rows
-    df = df.unique(keep="first")
-    logger.info(f"Num rows is {df.shape[0]}")
-
-    # output the to featurization pq file
-    output_dir = Path("data/cleaned")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    df.write_parquet(output_dir / "2015_2024_statcast_clean.parquet")
-    logger.info("done")
+    df.sink_parquet(params["featurize"]["input_data_path"])
     end_time = time.time()
     logger.info(f"Cleaning took {end_time - start_time} seconds")
 

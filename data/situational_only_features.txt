@@ -1,7 +1,6 @@
 stand
 is_high_pressure
 zone
-cumulative_pitch_count
 count
 inning_topbot
 at_bat_number
@@ -11,7 +10,3 @@ base_state
 release_speed
 outs_when_up
 inning
-is_tied
-is_leading
-is_trailing
-pitcher_game_pitch_count
