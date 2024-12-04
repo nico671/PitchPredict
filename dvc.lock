@@ -60,13 +60,13 @@ stages:
       size: 3660398
     - path: src/featurize.py
       hash: md5
-      md5: 7eb65543fba8838e3d259d2739c83427
-      size: 2856
+      md5: 448c9ccd2731c9ad2f7da31a81665cee
+      size: 3745
     outs:
     - path: data/training/2015_2024_statcast_train.parquet
       hash: md5
-      md5: 01239a237d69953d4c2dbd28603053ad
-      size: 2968919
+      md5: 8b8f2797d7787a85914a9cf6892fc0e0
+      size: 2951366
   evaluate:
     cmd: python3 src/evaluate.py data/evaluate/pitcher_data.pickle
     deps:

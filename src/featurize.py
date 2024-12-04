@@ -64,18 +64,44 @@ def main():
         descending=[False, False, False, True],
     )
 
+    # create target variable
     df = df.with_columns(
         df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
     ).drop_nulls("next_pitch")
 
+    # create count feature
     df = df.with_columns(
         (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
         .alias("count")
         .cast(pl.Categorical)
         .to_physical()
     )
-
     df = df.drop(["balls", "strikes"])
+
+    # create base state feature
+    df = df.with_columns(
+        pl.col("on_1b")
+        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+        .alias("on_1b"),
+        pl.col("on_2b")
+        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+        .alias("on_2b"),
+        pl.col("on_3b")
+        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+        .alias("on_3b"),
+    )
+    df = df.with_columns(
+        (pl.col("on_1b") * 3 + pl.col("on_2b") * 5 + pl.col("on_3b") * 7).alias(
+            "base_state"
+        )
+    )
+    df = df.drop(["on_1b", "on_2b", "on_3b"])
+
+    # create run_diff feature
+    df = df.with_columns(
+        (pl.col("fld_score") - pl.col("bat_score")).alias("run_diff").cast(pl.Int32),
+    )
+    df = df.drop(["fld_score", "bat_score"])
 
     if "next_pitch" not in df.columns:
         logger.error("next_pitch not in columns")

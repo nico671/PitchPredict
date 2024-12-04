@@ -46,13 +46,15 @@ plots:
     x: step
 - dvclive/Ragans, Cole_logs/plots/metrics:
     x: step
-- dvclive/Rodón, Carlos_logs/plots/metrics:
+- dvclive/Webb, Logan_logs/plots/metrics:
     x: step
 - dvclive/Skubal, Tarik_logs/plots/metrics:
     x: step
-- dvclive/Webb, Logan_logs/plots/metrics:
+- dvclive/Quintana, Jose_logs/plots/metrics:
     x: step
 - dvclive/Wheeler, Zack_logs/plots/metrics:
+    x: step
+- dvclive/Rodón, Carlos_logs/plots/metrics:
     x: step
 metrics:
 - dvclive/Cease, Dylan_logs/metrics.json
@@ -61,7 +63,8 @@ metrics:
 - dvclive/Nola, Aaron_logs/metrics.json
 - dvclive/Peralta, Freddy_logs/metrics.json
 - dvclive/Ragans, Cole_logs/metrics.json
-- dvclive/Rodón, Carlos_logs/metrics.json
-- dvclive/Skubal, Tarik_logs/metrics.json
 - dvclive/Webb, Logan_logs/metrics.json
+- dvclive/Skubal, Tarik_logs/metrics.json
+- dvclive/Quintana, Jose_logs/metrics.json
 - dvclive/Wheeler, Zack_logs/metrics.json
+- dvclive/Rodón, Carlos_logs/metrics.json
