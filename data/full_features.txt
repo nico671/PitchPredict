@@ -1,5 +1,4 @@
 stand
-is_high_pressure
 zone
 count
 inning_topbot
@@ -40,9 +39,3 @@ babip_value
 iso_value
 launch_speed_angle
 spin_axis
-delta_run_exp
-is_tied
-is_leading
-is_trailing
-pitcher_game_pitch_count
-spin_rate

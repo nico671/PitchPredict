@@ -2,7 +2,8 @@ import logging
 import sys
 from pathlib import Path
 
-import pandas as pd
+# import pandas as pd
+import polars as pl
 import yaml
 
 logger = logging.getLogger("featurize")
@@ -12,15 +13,6 @@ handler.setFormatter(
     logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 )
 logger.addHandler(handler)
-
-
-def next_pitch(player):
-    player = player.sort_values(
-        ["game_date", "game_pk", "at_bat_number", "pitch_number"]
-    )
-    logger.info(player)
-    player["next_pitch"] = player["pitch_type"].shift(-1)
-    return player
 
 
 def main():
@@ -40,91 +32,71 @@ def main():
         params = yaml.safe_load(file)
     input_file_path = params["featurize"]["input_data_path"]
 
-    df = pd.read_parquet(Path(input_file_path))
-    logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
-
-    logger.info("Creating target column")
-    df = df.groupby(["player_name"]).apply(
-        lambda gdf: gdf.assign(
-            next_pitch=lambda df: df["pitch_type"].shift(-1), include_groups=False
-        )
+    df = pl.read_parquet(Path(input_file_path))
+    df = df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=[False, False, False, True],
     )
 
-    # create target
+    df.head()
+
+    df = df.with_columns(
+        df.select(
+            pl.col(pl.String)
+            .exclude(["player_name"])
+            .cast(pl.Categorical)
+            .to_physical()
+        ),
+    )
+    df = df.fill_null(-1)
+    df = df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=[False, False, False, True],
+    )
+
+    df = df.with_columns(
+        df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
+    ).drop_nulls("next_pitch")
+
+    df = df.with_columns(
+        (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
+        .alias("count")
+        .cast(pl.Categorical)
+        .to_physical()
+    )
+
+    df = df.drop(["balls", "strikes"])
+
     if "next_pitch" not in df.columns:
-        logger.error("next_pitch column not created")
+        logger.error("next_pitch not in columns")
         sys.exit(1)
-    else:
-        logger.info("next_pitch column created")
-        df = df.reset_index(drop=True)
 
-    logger.info(f"Null count: {df.isnull().sum()}")
-
-    logger.info("Converting game_date to datetime")
-    df["game_date"] = pd.to_datetime(df["game_date"])
-
-    logger.info("Converting needing columns to categorical to work with lstm")
-    df["stand"] = df["stand"].astype("category").cat.codes
-    # Create necessary features
-
-    df["count"] = df["balls"].astype(str) + "-" + df["strikes"].astype(str)
-    df["count"] = df["count"].astype("category").cat.codes
-    df["on_1b"] = df["on_1b"].notnull().astype(int)
-    df["on_2b"] = df["on_2b"].notnull().astype(int)
-    df["on_3b"] = df["on_3b"].notnull().astype(int)
-    df["inning_topbot"] = df["inning_topbot"].astype("category").cat.codes
-    df["if_fielding_alignment"] = (
-        df["if_fielding_alignment"].astype("category").cat.codes
-    )
-    df["of_fielding_alignment"] = (
-        df["of_fielding_alignment"].astype("category").cat.codes
-    )
-    df["outs_when_up"] = df["outs_when_up"].astype(int)
-    df["inning"] = df["inning"].astype(int)
-    del df["balls"]
-    del df["strikes"]
-
-    df["run_diff"] = df["bat_score"] - df["fld_score"]  # run difference
-    del df["bat_score"]  # remove bat score
-    del df["fld_score"]  # remove field score
-    df["base_state"] = (
-        df["on_1b"].astype(int)
-        + 3 * df["on_2b"].astype(int)
-        + 5 * df["on_3b"].astype(int)
-    )
-
-    # Pitcher tendencies
-    df["cumulative_pitch_count"] = df.groupby(["game_date", "pitcher"]).cumcount() + 1
-    df["is_high_pressure"] = ((df["inning"] >= 7) & (abs(df["run_diff"]) <= 3)).astype(
-        int
-    )
-    df["is_tied"] = (df["run_diff"] == 0).astype(int)
-    df["is_leading"] = (df["run_diff"] > 0).astype(int)
-    df["is_trailing"] = (df["run_diff"] < 0).astype(int)
-    df["pitcher_game_pitch_count"] = df.groupby(["game_date", "pitcher"]).cumcount() + 1
-    df["spin_rate"] = df["release_spin_rate"].astype(float).fillna(-1)
-
-    features = []
+    features = df.columns
     features_path = Path(params["train"]["features_path"])
     with open(features_path, "r") as f:
         for item in f.readlines():
-            features.append(item.strip())
-
+            if item not in ["next_pitch", "pitcher", "player_name", "game_date"]:
+                features.append(item.strip())
+    features = list(set(features))
     logger.info(f"Features: {features}")
-    logger.info(f"Shape is now: {df.shape[0]} rows and {df.shape[1]} columns")
-
-    df["next_pitch"] = df["next_pitch"].astype(str)
-    df["pitch_type"] = df["pitch_type"].astype(str)
-    # Fill NaN values if necessary
-    df = df.fillna(-1).infer_objects(copy=False)
     # Create the output DataFrame
-    output_df = df[features + ["next_pitch", "pitcher", "player_name", "game_date"]]
+    output_df = df
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(output_dir / "2015_2024_statcast_train.parquet")
     # Write to Parquet file
-    output_df.to_parquet(output_dir / "2015_2024_statcast_train.parquet")
+    output_df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
 
     logger.info("done")
 

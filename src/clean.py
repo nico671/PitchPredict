@@ -52,6 +52,8 @@ def main():
             "game_year",
             "tfs_deprecated",
             "tfs_zulu_deprecated",
+            "home_score",
+            "away_score",
             "fielder_2",
             "umpire",
             "sv_id",
@@ -65,8 +67,6 @@ def main():
             "fielder_8",
             "fielder_9",
             "pitch_name",
-            "home_score",
-            "away_score",
             "post_away_score",
             "post_home_score",
             "post_bat_score",
@@ -78,7 +78,7 @@ def main():
 
     df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
 
-    df = df.drop_nulls(subset=["pitch_type", "pitcher", "batter"])
+    df = df.drop_nulls(subset=["pitch_type", "pitcher"])
 
     # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
     pitcher_counts = df.group_by("pitcher").len().sort("len", descending=True)
