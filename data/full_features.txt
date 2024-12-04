@@ -39,3 +39,4 @@ babip_value
 iso_value
 launch_speed_angle
 spin_axis
+pitches_thrown_curr_game

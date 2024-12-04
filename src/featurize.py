@@ -61,7 +61,7 @@ def main():
             "at_bat_number",
             "pitch_number",
         ],
-        descending=[False, False, False, True],
+        descending=True,
     )
 
     # create target variable
@@ -102,6 +102,23 @@ def main():
         (pl.col("fld_score") - pl.col("bat_score")).alias("run_diff").cast(pl.Int32),
     )
     df = df.drop(["fld_score", "bat_score"])
+
+    # calculate current game pitch count
+    df = df.with_columns(
+        pl.col("pitch_type")
+        .cum_count(reverse=False)
+        .over(["player_name", "game_date", "game_pk"])
+        .alias("pitches_thrown_curr_game")
+    )
+    df = df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=True,
+    )
 
     if "next_pitch" not in df.columns:
         logger.error("next_pitch not in columns")

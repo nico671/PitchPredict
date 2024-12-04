@@ -34,17 +34,7 @@ plots:
 - data/outputs/accuracy_plots
 - data/outputs/loss_plots
 - data/outputs/confusion_matrix
-- dvclive/Cease, Dylan_logs/plots/metrics:
-    x: step
-- dvclive/Lugo, Seth_logs/plots/metrics:
-    x: step
-- dvclive/Manaea, Sean_logs/plots/metrics:
-    x: step
-- dvclive/Nola, Aaron_logs/plots/metrics:
-    x: step
 - dvclive/Peralta, Freddy_logs/plots/metrics:
-    x: step
-- dvclive/Ragans, Cole_logs/plots/metrics:
     x: step
 - dvclive/Webb, Logan_logs/plots/metrics:
     x: step
@@ -56,15 +46,28 @@ plots:
     x: step
 - dvclive/Rodón, Carlos_logs/plots/metrics:
     x: step
+- dvclive/Ragans, Cole_logs/plots/metrics:
+    x: step
+- dvclive/Nola, Aaron_logs/plots/metrics:
+    x: step
+- dvclive/Severino, Luis_logs/plots/metrics:
+    x: step
+- dvclive/Cease, Dylan_logs/plots/metrics:
+    x: step
+- dvclive/Lugo, Seth_logs/plots/metrics:
+    x: step
+- dvclive/Manaea, Sean_logs/plots/metrics:
+    x: step
 metrics:
-- dvclive/Cease, Dylan_logs/metrics.json
-- dvclive/Lugo, Seth_logs/metrics.json
-- dvclive/Manaea, Sean_logs/metrics.json
-- dvclive/Nola, Aaron_logs/metrics.json
 - dvclive/Peralta, Freddy_logs/metrics.json
-- dvclive/Ragans, Cole_logs/metrics.json
 - dvclive/Webb, Logan_logs/metrics.json
 - dvclive/Skubal, Tarik_logs/metrics.json
 - dvclive/Quintana, Jose_logs/metrics.json
 - dvclive/Wheeler, Zack_logs/metrics.json
 - dvclive/Rodón, Carlos_logs/metrics.json
+- dvclive/Ragans, Cole_logs/metrics.json
+- dvclive/Nola, Aaron_logs/metrics.json
+- dvclive/Severino, Luis_logs/metrics.json
+- dvclive/Cease, Dylan_logs/metrics.json
+- dvclive/Lugo, Seth_logs/metrics.json
+- dvclive/Manaea, Sean_logs/metrics.json
