@@ -5,10 +5,10 @@ import sys
 from pathlib import Path
 from statistics import mean
 
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import tensorflow as tf
-from matplotlib import pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 
 logger = logging.getLogger("evaluate")
@@ -152,6 +152,7 @@ def main():
         y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
         # hue=[pitcher_data[pitcher]["player_name"] for pitcher in pitcher_data],
     )
+    plt.ylim(0, 100)
     plt.title("Performance Gain vs number of pitchers")
     plt.xlabel("Pitcher")
     plt.ylabel("Performance Gain")
@@ -170,6 +171,7 @@ def main():
         orient="v",
         # hue=[pitcher_data[pitcher]["player_name"] for pitcher in pitcher_data],
     )
+    plt.ylim(0, 100)
     plt.title("Performance Gain vs number of pitches")
     plt.xlabel("Pitcher")
     plt.ylabel("Performance Gain")
@@ -186,6 +188,7 @@ def main():
         x=[pitcher_data[pitcher]["unique_classes"] for pitcher in pitcher_data],
         y=[pitcher_data[pitcher]["performance_gain"] for pitcher in pitcher_data],
     )
+    plt.ylim(0, 100)
     plt.title("Performance Gain vs number of pitches")
     plt.xlabel("Pitcher")
     plt.ylabel("Performance Gain")
