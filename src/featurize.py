@@ -4,6 +4,7 @@ from pathlib import Path
 
 # import pandas as pd
 import polars as pl
+import pybaseball as pb
 import yaml
 
 logger = logging.getLogger("featurize")
@@ -119,6 +120,39 @@ def main():
         ],
         descending=True,
     )
+
+    batting_df = pb.batting_stats_bref(params["clean"]["start_year"])
+    print(batting_df.columns)
+    player_ids = list(df.select("batter").unique().to_pandas()["batter"])
+    batting_df = pl.DataFrame(batting_df[batting_df["mlbID"].isin(player_ids)])
+    batting_df = batting_df.drop(
+        [
+            "Name",
+            "Age",
+            "#days",
+            "Lev",
+            "Tm",
+            "G",
+            "PA",
+            "AB",
+            "R",
+            "H",
+            "2B",
+            "3B",
+            "HR",
+            "RBI",
+            "BB",
+            "IBB",
+            "SO",
+            "HBP",
+            "SH",
+            "SF",
+            "GDP",
+            "SB",
+            "CS",
+        ]
+    )
+    df = df.join(batting_df, left_on="batter", right_on="mlbID", how="left")
 
     if "next_pitch" not in df.columns:
         logger.error("next_pitch not in columns")
