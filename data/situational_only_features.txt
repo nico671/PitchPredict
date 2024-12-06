@@ -10,3 +10,7 @@ base_state
 release_speed
 outs_when_up
 inning
+BA	
+OBP	
+SLG	
+OPS

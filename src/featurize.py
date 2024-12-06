@@ -1,5 +1,6 @@
 import logging
 import sys
+import time
 from pathlib import Path
 
 # import pandas as pd
@@ -17,6 +18,7 @@ logger.addHandler(handler)
 
 
 def main():
+    start_time = time.time()
     # check for correct input length
     if len(sys.argv) != 1:
         logger.error("Arguments error. Usage:\n")
@@ -168,13 +170,23 @@ def main():
     logger.info(f"Features: {features}")
     # Create the output DataFrame
     output_df = df
+    output_df = output_df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=True,
+    )
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(output_dir / "2015_2024_statcast_train.parquet")
     # Write to Parquet file
     output_df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
-
+    end_time = time.time()
+    logger.info(f"Time taken: {end_time - start_time:.2f} seconds")
     logger.info("done")
 
 
