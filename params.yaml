@@ -1,7 +1,7 @@
 clean:
   input_data_path: data/raw/2015_2024_statcast.parquet
-  num_pitchers: 15
-  start_year: 2023
+  num_pitchers: 50
+  start_year: 2024
   min_pitches: 0
 featurize:
   input_data_path: data/cleaned/2015_2024_statcast_clean.parquet

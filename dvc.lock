@@ -9,7 +9,7 @@ stages:
       size: 631521449
     - path: params.yaml
       hash: md5
-      md5: fae6564d9a22e7fa6916155881f79dbf
+      md5: 96a47d5e49aef4ac66a5a36fe2890d6c
       size: 514
     - path: src/clean.py
       hash: md5
@@ -18,8 +18,8 @@ stages:
     outs:
     - path: data/cleaned/2015_2024_statcast_clean.parquet
       hash: md5
-      md5: 8dfcd0901cf1a16b48d6daceb73982c3
-      size: 10048594
+      md5: 4375126039badbae6b94a7ac276c5169
+      size: 16605743
   data_split:
     cmd: python3 src/data_split.py data/cleaned/2015_2024_statcast_clean.parquet
     deps:
@@ -36,8 +36,8 @@ stages:
     deps:
     - path: data/training/2015_2024_statcast_train.parquet
       hash: md5
-      md5: 0b33eb78f7c8eb7174899e06a14e0ff0
-      size: 5624336
+      md5: 34aaa11201d5c77dcaba40017cab8d45
+      size: 13587751
     - path: src/lstm_model.py
       hash: md5
       md5: 79b2d809b0fd619472371201e569ad21
@@ -49,31 +49,31 @@ stages:
     outs:
     - path: data/evaluate/pitcher_data.pickle
       hash: md5
-      md5: ab7632957f88072504e50575b14ea5ce
-      size: 55787133
+      md5: 5f9c6da47d9c500f46d040488ac3552d
+      size: 161949100
   featurize:
     cmd: python3 src/featurize.py
     deps:
     - path: data/cleaned/2015_2024_statcast_clean.parquet
       hash: md5
-      md5: 8dfcd0901cf1a16b48d6daceb73982c3
-      size: 10048594
+      md5: 4375126039badbae6b94a7ac276c5169
+      size: 16605743
     - path: src/featurize.py
       hash: md5
-      md5: 4953ef1f33f50ffc91458d552024e41a
-      size: 5294
+      md5: 715bc31e49cb4f2fdd3d587f36acbe66
+      size: 5431
     outs:
     - path: data/training/2015_2024_statcast_train.parquet
       hash: md5
-      md5: ca61a2770be45f5c3253a3bb9871a471
-      size: 8243525
+      md5: 34aaa11201d5c77dcaba40017cab8d45
+      size: 13587751
   evaluate:
     cmd: python3 src/evaluate.py data/evaluate/pitcher_data.pickle
     deps:
     - path: data/evaluate/pitcher_data.pickle
       hash: md5
-      md5: ab7632957f88072504e50575b14ea5ce
-      size: 55787133
+      md5: 5f9c6da47d9c500f46d040488ac3552d
+      size: 161949100
     - path: src/evaluate.py
       hash: md5
       md5: ba7be0ee4aa54fa7e204f8aad7f300fc
@@ -81,6 +81,6 @@ stages:
     outs:
     - path: data/outputs/
       hash: md5
-      md5: e1357488fd90ebb7a35406c48637a496.dir
-      size: 781846
-      nfiles: 32
+      md5: c27ba318ec79a28b4ce6fba3e96d63ce.dir
+      size: 4933825
+      nfiles: 152

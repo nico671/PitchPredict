@@ -17,6 +17,32 @@ handler.setFormatter(
 logger.addHandler(handler)
 
 
+def create_count_feature(df):
+    df = df.with_columns(
+        (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
+        .alias("count")
+        .cast(pl.Categorical)
+        .to_physical()
+    )
+    return df.drop(["balls", "strikes"])
+
+
+def create_target(df):
+    df = df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=True,
+    )
+    # create target variable
+    return df.with_columns(
+        df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
+    ).drop_nulls("next_pitch")
+
+
 def main():
     start_time = time.time()
     # check for correct input length
@@ -56,30 +82,12 @@ def main():
             .to_physical()
         ),
     )
-    df = df.fill_null(-1)
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=True,
-    )
 
     # create target variable
-    df = df.with_columns(
-        df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
-    ).drop_nulls("next_pitch")
+    df = create_target(df)
 
     # create count feature
-    df = df.with_columns(
-        (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
-        .alias("count")
-        .cast(pl.Categorical)
-        .to_physical()
-    )
-    df = df.drop(["balls", "strikes"])
+    df = create_count_feature(df)
 
     # create base state feature
     df = df.with_columns(
@@ -167,7 +175,10 @@ def main():
             if item not in ["next_pitch", "pitcher", "player_name", "game_date"]:
                 features.append(item.strip())
     features = list(set(features))
-    logger.info(f"Features: {features}")
+
+    df = df.fill_null(-1)
+    df = df.fill_nan(-1)
+
     # Create the output DataFrame
     output_df = df
     output_df = output_df.sort(
