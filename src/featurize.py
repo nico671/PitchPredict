@@ -35,7 +35,7 @@ def create_target(df):
             "at_bat_number",
             "pitch_number",
         ],
-        descending=True,
+        descending=False,
     )
     # create target variable
     return df.with_columns(
@@ -69,7 +69,7 @@ def main():
             "at_bat_number",
             "pitch_number",
         ],
-        descending=[False, False, False, True],
+        descending=False,
     )
 
     df.head()
@@ -128,7 +128,7 @@ def main():
             "at_bat_number",
             "pitch_number",
         ],
-        descending=True,
+        descending=False,
     )
 
     batting_df = pb.batting_stats_bref(params["clean"]["start_year"])
@@ -188,7 +188,7 @@ def main():
             "at_bat_number",
             "pitch_number",
         ],
-        descending=True,
+        descending=False,
     )
     # Ensure output directory exists
     output_dir = Path("data/training")

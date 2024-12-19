@@ -7,16 +7,19 @@ from pathlib import Path
 from statistics import mean
 
 import numpy as np
-import pandas as pd
+import polars as pl
 import yaml
 from sklearn.calibration import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 
 from lstm_model import (
-    calculate_class_weights,
     compile_and_fit,
     create_model,
 )
+
+params_path = Path("params.yaml")
+with open(params_path, "r") as file:
+    params = yaml.safe_load(file)
 
 logger = logging.getLogger("choo choo")
 logger.setLevel(logging.INFO)
@@ -27,53 +30,50 @@ handler.setFormatter(
 logger.addHandler(handler)
 
 
-def create_training_data(df, pitcher, features):
-    # split data by pitcher
-    pitcher_df = df[df["pitcher"] == pitcher].reset_index(drop=True)
-    # sort again to ensure sequential order
-    pitcher_df = pitcher_df.sort_values(["game_date", "at_bat_number", "pitch_number"])
+def create_sequences(X, y, time_steps):
+    Xs, ys = [], []
+    for i in range(len(X) - time_steps):
+        v = X[i : (i + time_steps)]
+        Xs.append(v)
+        ys.append(y[i + time_steps])
+    return np.array(Xs), np.array(ys)
 
-    # split into x, y
-    X = pitcher_df[features].values
-    y = pitcher_df["next_pitch"].values
 
-    # encode labels
+def create_training_data(pitcher_df, features):
+    # sort the data by game_date, game_pk, at_bat_number, pitch_number
+    pitcher_df = pitcher_df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=False,
+    )
+
+    # select features and target variable for initial split of X and y
+    X = pitcher_df.select(pl.col(features)).to_numpy()
+    y = pitcher_df.select(pl.col("next_pitch")).to_numpy().ravel()
+
+    # encode target variable
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(y)
     y = y_encoded
 
     # declare time steps
-    params_path = Path("params.yaml")
-    with open(params_path, "r") as file:
-        params = yaml.safe_load(file)
-
     time_steps = params["train"]["time_steps"]
 
-    # sequence creation helper function
-    def create_sequences(X, y, time_steps):
-        sequences = []
-        targets = []
-        for i in range(len(X) - time_steps):
-            seq = X[
-                i : i + time_steps
-            ]  # Get the sequence of features (input pitches), size = time_steps
-            label = y[i + time_steps]  # Target for the sequence
-            sequences.append(seq)
-            targets.append(label)
-        return np.array(sequences), np.array(targets)
-
-    X_sequences, y_sequences = create_sequences(X, y, time_steps)
+    X_seq, y_seq = create_sequences(X, y, time_steps)
     # convert to correct datatypes for model
-    X_sequences = X_sequences.astype("float32")
-    y_sequences = y_sequences.astype("int32")  # Ensure labels are integers
+    X_seq = X_seq.astype("float32")
+    y_seq = y_seq.astype("int32")  # Ensure labels are integers
 
     # split into train, test, val
     train_split = params["train"]["train_split"]
-    train_size = int(len(X_sequences) * train_split)
-    val_size = int(len(X_sequences) * (1 - train_split) / 2)
-    X_train, X_val, X_test = np.split(X_sequences, [train_size, train_size + val_size])
-    y_train, y_val, y_test = np.split(y_sequences, [train_size, train_size + val_size])
-    class_weight = calculate_class_weights(y_train)
+    train_size = int(len(X_seq) * train_split)
+    val_size = int(len(X_seq) * (1 - train_split) / 2)
+    X_train, X_val, X_test = np.split(X_seq, [train_size, train_size + val_size])
+    y_train, y_val, y_test = np.split(y_seq, [train_size, train_size + val_size])
 
     # scale features, no reason for minmax tbh, just read a stackoverflow that recommended it
     scaler = MinMaxScaler()
@@ -86,7 +86,7 @@ def create_training_data(df, pitcher, features):
         X_test.shape
     )
 
-    # TODO: fix that not all labels show up in the splits, this is affecting test accuracy for some pitchers with weird splits
+    # hidden until i figure out how to handle this problem
     # logger.info("Unique labels in y_train:", list(np.unique(y_train)))
     # logger.info("Unique labels in y_val:", list(np.unique(y_val)))
     # logger.info("Unique labels in y_test:", list(np.unique(y_test)))
@@ -99,76 +99,63 @@ def create_training_data(df, pitcher, features):
         X_test_scaled,
         y_test,
         label_encoder,
-        class_weight,
     )
 
 
 def training_loop(df, params):
     pitcher_data = {}
     count = 0
-    logger.info("Number of pitchers: %d", len(df["pitcher"].unique()))
     features = []
     features_path = Path(params["train"]["features_path"])
     with open(features_path, "r") as f:
         for item in f.readlines():
             features.append(item.strip())
     start_time = time.time()
-    for pitcher in df["pitcher"].unique():
-        logger.info(
-            f"Training model for pitcher: {df[df['pitcher'] == pitcher]['player_name'].iloc[0]}"
-        )
-        logger.info(f"{len(df[df['pitcher'] == pitcher])} pitches")
-        pitcher_df = df[df["pitcher"] == pitcher]
-        X_train, y_train, X_val, y_val, X_test, y_test, label_encoder, class_weight = (
-            create_training_data(pitcher_df, pitcher, features)
-        )
+    for pitcher_df in df.group_by("pitcher"):
+        pitcher_code = pitcher_df[0]
+        pitcher_df = pitcher_df[1]
 
-        # Ensure labels are integers
-        y_train = y_train.astype(int)
-        y_val = y_val.astype(int)
-        y_test = y_test.astype(int)
+        pitcher_name = pitcher_df.select(pl.first("player_name")).item()
+        num_pitches = len(pitcher_df)
+        logger.info(
+            f"Training model for pitcher: {pitcher_name} - {num_pitches} pitches"
+        )
+        X_train, y_train, X_val, y_val, X_test, y_test, label_encoder = (
+            create_training_data(pitcher_df, features)
+        )
 
         lstm_model = create_model(X_train.shape[1:], len(label_encoder.classes_))
-
         history = compile_and_fit(
             lstm_model,
             X_train,
             y_train,
             X_val,
             y_val,
-            pitcher_df["player_name"].iloc[0],
+            pitcher_name,
         )
+        most_common_pitch_rate = pitcher_df.select(
+            pl.col("pitch_type").value_counts().sort(descending=False).head(1)
+        ).item()["count"] / len(pitcher_df)
 
+        print(f"Most common pitch rate for {pitcher_name}: {most_common_pitch_rate}")
         test_loss, test_accuracy = lstm_model.evaluate(X_test, y_test)
-        pitcher_data[pitcher] = {
+        pitcher_data[pitcher_code] = {
             "model": lstm_model,
             "history": history,
             "test_loss": test_loss,
             "test_accuracy": test_accuracy,
             "total_pitches": len(y_test) + len(y_train) + len(y_val),
             "unique_classes": len(np.unique(y_train)),
-            "player_name": df[df["pitcher"] == pitcher]["player_name"].iloc[0],
+            "player_name": pitcher_name,
             "X_test": X_test,
             "y_test": y_test,
             "label_encoder": label_encoder,
-            "most_common_pitch_rate": pitcher_df["next_pitch"]
-            .value_counts()
-            .sort_values(ascending=False)
-            .iloc[0]
-            / len(pitcher_df),
-            "performance_gain": (
-                test_accuracy
-                - pitcher_df["next_pitch"]
-                .value_counts()
-                .sort_values(ascending=False)
-                .iloc[0]
-                / len(pitcher_df)
-            )
-            * 100,
+            "most_common_pitch_rate": most_common_pitch_rate,
+            "performance_gain": (test_accuracy - most_common_pitch_rate) * 100,
         }
         logger.info(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}")
         logger.info(
-            f" Accuracy Gained over guessing most common pitch for {pitcher_data[pitcher]['player_name']}: {((test_accuracy - pitcher_data[pitcher]["most_common_pitch_rate"]) * 100):.2f}%",
+            f" Accuracy Gained over guessing most common pitch for {pitcher_name}: {pitcher_data[pitcher_code]["performance_gain"]:.2f}%",
         )
         logger.info(
             f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data])*100:.2f}%"
@@ -180,7 +167,7 @@ def training_loop(df, params):
 
         count += 1
         logger.info(
-            f'{count} of {len(df["pitcher"].unique())}, {count/len(df["pitcher"].unique()) * 100:.2f}% done!'
+            f'{count} of {len(df.select(pl.col("pitcher")).unique())}, {(count/len(df.select(pl.col("pitcher")).unique())) * 100:.2f}% done!'
         )
     end_time = time.time()
     logger.info(f"Training took {end_time - start_time} seconds")
@@ -196,9 +183,7 @@ def main():
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
 
-    input_file_path = params["train"]["input_data_path"]
-    df = pd.read_parquet(Path(input_file_path))
-    logger.info(f"Shape is initially: {df.shape[0]} rows and {df.shape[1]} columns")
+    df = pl.read_parquet(Path(params["train"]["input_data_path"]))
     pitcher_data = training_loop(df, params)
 
     output_dir = Path("data/evaluate/")

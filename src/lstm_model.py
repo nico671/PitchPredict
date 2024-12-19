@@ -32,17 +32,20 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     )
 
     callbacks = [
+        # early stopping callback to stop training when the model is not improving
         tf.keras.callbacks.EarlyStopping(
             monitor="val_sparse_categorical_accuracy",
             patience=PATIENCE,
             restore_best_weights=True,
         ),
+        # reduce learning rate on plateau callback to reduce the learning rate when the model is not improving
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss",
             factor=0.2,
             patience=PATIENCE,
             min_lr=1e-6,
         ),
+        # metric logging callback to log metrics to dvclive
         DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
 
