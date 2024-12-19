@@ -21,6 +21,7 @@ def main():
         logger.error("Arguments error. Usage:\n")
         logger.error("not enough inputs, expected input structure is: *.py")
         sys.exit(1)
+
     # check for correct input file types
     elif ".py" not in sys.argv[0]:
         logger.error(
@@ -34,9 +35,11 @@ def main():
     # read in the complete data frame
     df = pl.scan_parquet(input_file_path)
 
+    # filter to correct years
     df = df.with_columns(pl.col("game_date").str.to_datetime())
     df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
 
+    # drop columns that will never be used
     df = df.drop(
         [
             "Unnamed: 0",
@@ -76,8 +79,7 @@ def main():
         ]
     )
 
-    df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
-
+    # drop rows with null values in the columns 'pitch_type' and 'pitcher', as they cant be used for training
     df = df.drop_nulls(subset=["pitch_type", "pitcher"])
 
     # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
@@ -86,10 +88,8 @@ def main():
         "pitcher"
     )
 
-    # Collect the 'pitcher' column into a list
+    # Collect the 'pitcher' column into a list and filter the dataframe to only include the top k pitchers
     top_k_pitchers_list = top_k_pitchers.collect().get_column("pitcher").to_list()
-
-    # Now 'is_in' can use the list
     df = df.filter(pl.col("pitcher").is_in(top_k_pitchers_list))
 
     df.sink_parquet(params["featurize"]["input_data_path"])

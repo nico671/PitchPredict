@@ -180,9 +180,6 @@ def main():
         logger.error("not enough inputs, expected input structure is: *.py")
         sys.exit(1)
 
-    with open("params.yaml", "r") as file:
-        params = yaml.safe_load(file)
-
     df = pl.read_parquet(Path(params["train"]["input_data_path"]))
     pitcher_data = training_loop(df, params)
 
