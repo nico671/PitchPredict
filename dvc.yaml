@@ -48,8 +48,6 @@ plots:
     x: step
 - dvclive/Gausman, Kevin_logs/plots/metrics:
     x: step
-- dvclive/Singer, Brady_logs/plots/metrics:
-    x: step
 - dvclive/Miller, Bryce_logs/plots/metrics:
     x: step
 - dvclive/Cease, Dylan_logs/plots/metrics:
@@ -138,6 +136,8 @@ plots:
     x: step
 - dvclive/Berríos, José_logs/plots/metrics:
     x: step
+- dvclive/Singer, Brady_logs/plots/metrics:
+    x: step
 metrics:
 - dvclive/Cole, Gerrit_logs/metrics.json
 - dvclive/Gallen, Zac_logs/metrics.json
@@ -146,7 +146,6 @@ metrics:
 - dvclive/King, Michael_logs/metrics.json
 - dvclive/Irvin, Jake_logs/metrics.json
 - dvclive/Gausman, Kevin_logs/metrics.json
-- dvclive/Singer, Brady_logs/metrics.json
 - dvclive/Miller, Bryce_logs/metrics.json
 - dvclive/Cease, Dylan_logs/metrics.json
 - dvclive/Flaherty, Jack_logs/metrics.json
@@ -191,3 +190,4 @@ metrics:
 - dvclive/Brown, Hunter_logs/metrics.json
 - dvclive/Flexen, Chris_logs/metrics.json
 - dvclive/Berríos, José_logs/metrics.json
+- dvclive/Singer, Brady_logs/metrics.json
