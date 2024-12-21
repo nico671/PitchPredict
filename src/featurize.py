@@ -116,14 +116,16 @@ def main():
 
     features = df.columns
     features_path = Path(params["train"]["features_path"])
-    with open(features_path, "r") as f:
-        for item in f.readlines():
-            if item not in ["next_pitch", "pitcher", "player_name", "game_date"]:
-                features.append(item.strip())
     features = list(set(features))
     with open(features_path, "w") as f:
         for item in features:
-            if item not in ["next_pitch", "pitcher", "player_name", "game_date"]:
+            if item not in [
+                "next_pitch",
+                "pitcher",
+                "player_name",
+                "game_date",
+                "batter",
+            ]:
                 f.write(f"{item}\n")
 
     df = df.fill_null(-1)

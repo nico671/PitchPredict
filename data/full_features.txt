@@ -31,7 +31,6 @@ count
 estimated_ba_using_speedangle
 at_bat_number
 vy0
-batter
 stand
 type
 BA
