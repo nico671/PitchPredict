@@ -8,7 +8,7 @@ import polars as pl
 import pybaseball as pb
 import yaml
 
-from src.utils.utils import (
+from utils.utils import (
     create_count_feature,
     create_state_feature,
     create_target,
@@ -79,7 +79,6 @@ def main():
     df = sort_by_date(df)
 
     batting_df = pb.batting_stats_bref(params["clean"]["start_year"])
-    print(batting_df.columns)
     player_ids = list(df.select("batter").unique().to_pandas()["batter"])
     batting_df = pl.DataFrame(batting_df[batting_df["mlbID"].isin(player_ids)])
     batting_df = batting_df.drop(
@@ -115,17 +114,20 @@ def main():
         logger.error("next_pitch not in columns")
         sys.exit(1)
 
-    features = []
+    features = df.columns
     features_path = Path(params["train"]["features_path"])
     with open(features_path, "r") as f:
         for item in f.readlines():
             if item not in ["next_pitch", "pitcher", "player_name", "game_date"]:
                 features.append(item.strip())
     features = list(set(features))
+    with open(features_path, "w") as f:
+        for item in features:
+            if item not in ["next_pitch", "pitcher", "player_name", "game_date"]:
+                f.write(f"{item}\n")
 
     df = df.fill_null(-1)
     df = df.fill_nan(-1)
-
     # Create the output DataFrame
     output_df = df
     output_df = sort_by_date(output_df)
@@ -137,7 +139,6 @@ def main():
     output_df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
     end_time = time.time()
     logger.info(f"Time taken: {end_time - start_time:.2f} seconds")
-    logger.info("done")
 
 
 if __name__ == "__main__":

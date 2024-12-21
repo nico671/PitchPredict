@@ -12,8 +12,8 @@ import yaml
 from sklearn.calibration import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 
-from src.utils.lstm_model import compile_and_fit, create_model
-from src.utils.utils import sort_by_date
+from utils.lstm_model import compile_and_fit, create_model
+from utils.utils import sort_by_date
 
 params_path = Path("params.yaml")
 with open(params_path, "r") as file:
@@ -160,7 +160,7 @@ def training_loop(df, params):
 
         count += 1
         logger.info(
-            f'{count} of {len(df.select(pl.col("pitcher")).unique())}, {(count/len(df.select(pl.col("pitcher")).unique())) * 100:.2f}% done!'
+            f'{count} of {len(df.select(pl.col("pitcher")).unique())}, {(count/len(df.select(pl.col("pitcher")).unique())) * 100:.2f}% done!\n'
         )
     end_time = time.time()
     logger.info(f"Training took {end_time - start_time} seconds")

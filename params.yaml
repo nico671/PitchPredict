@@ -8,12 +8,12 @@ featurize:
 train:
   input_data_path: data/training/2015_2024_statcast_train.parquet
   features_path: data/full_features.txt
-  dropout: 0.1 # keep this at 0.1
+  dropout: 0.05 # keep this at 0.1
   patience: 10
   kernel_regularizer: 0.01 # keep this at 0.01
   batch_normalization: true
   batch_size: 32
   time_steps: 25
-  train_split: .8
+  train_split: .7
   epochs: 200
   lstm_units: 64

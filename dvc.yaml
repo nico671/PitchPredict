@@ -18,7 +18,7 @@ stages:
     cmd: python3 src/train.py
     deps:
     - data/training/2015_2024_statcast_train.parquet
-    - src/lstm_model.py
+    - src/utils/lstm_model.py
     - src/train.py
     outs:
     - data/evaluate/pitcher_data.pickle
@@ -37,10 +37,6 @@ plots:
 - dvclive/Cole, Gerrit_logs/plots/metrics:
     x: step
 - dvclive/Gallen, Zac_logs/plots/metrics:
-    x: step
-- dvclive/Bibee, Tanner_logs/plots/metrics:
-    x: step
-- dvclive/Flaherty, Jack_logs/plots/metrics:
     x: step
 - dvclive/Morton, Charlie_logs/plots/metrics:
     x: step
@@ -92,31 +88,11 @@ plots:
     x: step
 - dvclive/Wheeler, Zack_logs/plots/metrics:
     x: step
-- dvclive/Blanco, Ronel_logs/plots/metrics:
-    x: step
-- dvclive/Keller, Mitch_logs/plots/metrics:
-    x: step
-- dvclive/Sale, Chris_logs/plots/metrics:
-    x: step
-- dvclive/Fedde, Erick_logs/plots/metrics:
-    x: step
-- dvclive/Brown, Hunter_logs/plots/metrics:
-    x: step
-- dvclive/Flexen, Chris_logs/plots/metrics:
-    x: step
-- dvclive/Berríos, José_logs/plots/metrics:
-    x: step
 - dvclive/Singer, Brady_logs/plots/metrics:
-    x: step
-- dvclive/Irvin, Jake_logs/plots/metrics:
     x: step
 - dvclive/King, Michael_logs/plots/metrics:
     x: step
 - dvclive/Gausman, Kevin_logs/plots/metrics:
-    x: step
-- dvclive/Miller, Bryce_logs/plots/metrics:
-    x: step
-- dvclive/Kirby, George_logs/plots/metrics:
     x: step
 - dvclive/Cease, Dylan_logs/plots/metrics:
     x: step
@@ -138,11 +114,33 @@ plots:
     x: step
 - dvclive/Sánchez, Cristopher_logs/plots/metrics:
     x: step
+- dvclive/Blanco, Ronel_logs/plots/metrics:
+    x: step
+- dvclive/Sale, Chris_logs/plots/metrics:
+    x: step
+- dvclive/Keller, Mitch_logs/plots/metrics:
+    x: step
+- dvclive/Berríos, José_logs/plots/metrics:
+    x: step
+- dvclive/Bibee, Tanner_logs/plots/metrics:
+    x: step
+- dvclive/Irvin, Jake_logs/plots/metrics:
+    x: step
+- dvclive/Flaherty, Jack_logs/plots/metrics:
+    x: step
+- dvclive/Kirby, George_logs/plots/metrics:
+    x: step
+- dvclive/Miller, Bryce_logs/plots/metrics:
+    x: step
+- dvclive/Fedde, Erick_logs/plots/metrics:
+    x: step
+- dvclive/Brown, Hunter_logs/plots/metrics:
+    x: step
+- dvclive/Flexen, Chris_logs/plots/metrics:
+    x: step
 metrics:
 - dvclive/Cole, Gerrit_logs/metrics.json
 - dvclive/Gallen, Zac_logs/metrics.json
-- dvclive/Bibee, Tanner_logs/metrics.json
-- dvclive/Flaherty, Jack_logs/metrics.json
 - dvclive/Morton, Charlie_logs/metrics.json
 - dvclive/Skubal, Tarik_logs/metrics.json
 - dvclive/Kikuchi, Yusei_logs/metrics.json
@@ -168,19 +166,9 @@ metrics:
 - dvclive/Castillo, Luis_logs/metrics.json
 - dvclive/Pfaadt, Brandon_logs/metrics.json
 - dvclive/Wheeler, Zack_logs/metrics.json
-- dvclive/Blanco, Ronel_logs/metrics.json
-- dvclive/Keller, Mitch_logs/metrics.json
-- dvclive/Sale, Chris_logs/metrics.json
-- dvclive/Fedde, Erick_logs/metrics.json
-- dvclive/Brown, Hunter_logs/metrics.json
-- dvclive/Flexen, Chris_logs/metrics.json
-- dvclive/Berríos, José_logs/metrics.json
 - dvclive/Singer, Brady_logs/metrics.json
-- dvclive/Irvin, Jake_logs/metrics.json
 - dvclive/King, Michael_logs/metrics.json
 - dvclive/Gausman, Kevin_logs/metrics.json
-- dvclive/Miller, Bryce_logs/metrics.json
-- dvclive/Kirby, George_logs/metrics.json
 - dvclive/Cease, Dylan_logs/metrics.json
 - dvclive/Ragans, Cole_logs/metrics.json
 - dvclive/Gibson, Kyle_logs/metrics.json
@@ -191,3 +179,15 @@ metrics:
 - dvclive/Burnes, Corbin_logs/metrics.json
 - dvclive/Bello, Brayan_logs/metrics.json
 - dvclive/Sánchez, Cristopher_logs/metrics.json
+- dvclive/Blanco, Ronel_logs/metrics.json
+- dvclive/Sale, Chris_logs/metrics.json
+- dvclive/Keller, Mitch_logs/metrics.json
+- dvclive/Berríos, José_logs/metrics.json
+- dvclive/Bibee, Tanner_logs/metrics.json
+- dvclive/Irvin, Jake_logs/metrics.json
+- dvclive/Flaherty, Jack_logs/metrics.json
+- dvclive/Kirby, George_logs/metrics.json
+- dvclive/Miller, Bryce_logs/metrics.json
+- dvclive/Fedde, Erick_logs/metrics.json
+- dvclive/Brown, Hunter_logs/metrics.json
+- dvclive/Flexen, Chris_logs/metrics.json
