@@ -4,16 +4,26 @@ import numpy as np
 import tensorflow as tf
 import yaml
 
+from dvclive import Live
+from dvclive.keras import DVCLiveCallback
+
 params = Path("params.yaml")
 with open(params, "r") as file:
     params = yaml.safe_load(file)
 DROPOUT = params["train"]["dropout"]
 PATIENCE = params["train"]["patience"]
+KERN_REG = params["train"]["kernel_regularizer"]
+BATCH_NORMALIZATION = params["train"]["batch_normalization"]
+BATCH_SIZE = params["train"]["batch_size"]
+EPOCHS = params["train"]["epochs"]
+LSTM_UNITS = params["train"]["lstm_units"]
 
 
-def compile_and_fit(model, X_train, y_train, X_val, y_val, class_weight):
+def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     optimizer = tf.keras.optimizers.Adam(
-        learning_rate=1e-4, clipnorm=1.0, weight_decay=1e-4
+        learning_rate=1e-4,  # - learning_rate: controls how much to change the model in response to the estimated error each time the model weights are updated.
+        clipnorm=1.0,  # - clipnorm: clips gradients by norm; helps prevent exploding gradients.
+        weight_decay=1e-4,  # - weight_decay: adds a penalty to the loss function to prevent overfitting.
     )
     model.compile(
         optimizer=optimizer,
@@ -22,27 +32,30 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, class_weight):
     )
 
     callbacks = [
+        # early stopping callback to stop training when the model is not improving
         tf.keras.callbacks.EarlyStopping(
             monitor="val_sparse_categorical_accuracy",
             patience=PATIENCE,
             restore_best_weights=True,
         ),
+        # reduce learning rate on plateau callback to reduce the learning rate when the model is not improving
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss",
             factor=0.2,
             patience=PATIENCE,
             min_lr=1e-6,
         ),
+        # metric logging callback to log metrics to dvclive
+        DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
 
     history = model.fit(
         X_train,
         y_train,
         validation_data=(X_val, y_val),
-        epochs=50,  # early stopping typically occurs around 20 anyways
-        batch_size=16,
+        epochs=EPOCHS,
+        batch_size=BATCH_SIZE,
         callbacks=callbacks,
-        # class_weight=class_weight, # hurts performance
     )
 
     return history
@@ -53,30 +66,33 @@ def create_model(input_shape, num_classes):
     model.add(tf.keras.layers.InputLayer(shape=input_shape))
     model.add(
         tf.keras.layers.LSTM(
-            128,
+            LSTM_UNITS,
             return_sequences=True,
             dropout=DROPOUT,
-            kernel_regularizer=tf.keras.regularizers.l2(0.01),
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
-    model.add(tf.keras.layers.BatchNormalization())
+    if BATCH_NORMALIZATION:
+        model.add(tf.keras.layers.BatchNormalization())
     model.add(
         tf.keras.layers.LSTM(
-            128,
+            LSTM_UNITS,
             return_sequences=True,
             dropout=DROPOUT,
-            kernel_regularizer=tf.keras.regularizers.l2(0.01),
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
-    model.add(tf.keras.layers.BatchNormalization())
+    if BATCH_NORMALIZATION:
+        model.add(tf.keras.layers.BatchNormalization())
     model.add(
         tf.keras.layers.LSTM(
-            64,
+            LSTM_UNITS,
             dropout=DROPOUT,
-            kernel_regularizer=tf.keras.regularizers.l2(0.01),
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
-    model.add(tf.keras.layers.BatchNormalization())
+    if BATCH_NORMALIZATION:
+        model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.Dense(num_classes, activation="softmax"))
     return model
 
