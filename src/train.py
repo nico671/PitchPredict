@@ -12,10 +12,7 @@ import yaml
 from sklearn.calibration import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 
-from lstm_model import (
-    compile_and_fit,
-    create_model,
-)
+from lstm_model import compile_and_fit, create_model
 
 params_path = Path("params.yaml")
 with open(params_path, "r") as file:
@@ -64,6 +61,7 @@ def create_training_data(pitcher_df, features):
     time_steps = params["train"]["time_steps"]
 
     X_seq, y_seq = create_sequences(X, y, time_steps)
+
     # convert to correct datatypes for model
     X_seq = X_seq.astype("float32")
     y_seq = y_seq.astype("int32")  # Ensure labels are integers
@@ -87,9 +85,10 @@ def create_training_data(pitcher_df, features):
     )
 
     # hidden until i figure out how to handle this problem
-    # logger.info("Unique labels in y_train:", list(np.unique(y_train)))
-    # logger.info("Unique labels in y_val:", list(np.unique(y_val)))
-    # logger.info("Unique labels in y_test:", list(np.unique(y_test)))
+    logger.info(f"Unique classes: {len(np.unique(y))}")
+    logger.info(f"Classes missing from test: {len(np.setdiff1d(y, y_test))}")
+    logger.info(f"Classes missing from train: {len(np.setdiff1d(y, y_train))}")
+    logger.info(f"Classes missing from val: {len(np.setdiff1d(y, y_val))}")
 
     return (
         X_train_scaled,
@@ -133,6 +132,7 @@ def training_loop(df, params):
             y_val,
             pitcher_name,
         )
+
         most_common_pitch_rate = pitcher_df.select(
             pl.col("pitch_type").value_counts().sort(descending=False).head(1)
         ).item()["count"] / len(pitcher_df)

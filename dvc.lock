@@ -13,8 +13,8 @@ stages:
       size: 514
     - path: src/clean.py
       hash: md5
-      md5: 3a85f84ed03acea1d9bf7254d6530d6d
-      size: 2967
+      md5: 200a08e20effc965b36dcf5ee8767c72
+      size: 3091
     outs:
     - path: data/cleaned/2015_2024_statcast_clean.parquet
       hash: md5

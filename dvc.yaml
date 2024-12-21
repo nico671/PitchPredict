@@ -38,18 +38,6 @@ plots:
     x: step
 - dvclive/Gallen, Zac_logs/plots/metrics:
     x: step
-- dvclive/Blanco, Ronel_logs/plots/metrics:
-    x: step
-- dvclive/Brown, Hunter_logs/plots/metrics:
-    x: step
-- dvclive/Flexen, Chris_logs/plots/metrics:
-    x: step
-- dvclive/Fedde, Erick_logs/plots/metrics:
-    x: step
-- dvclive/Keller, Mitch_logs/plots/metrics:
-    x: step
-- dvclive/Sale, Chris_logs/plots/metrics:
-    x: step
 - dvclive/Berríos, José_logs/plots/metrics:
     x: step
 - dvclive/Bibee, Tanner_logs/plots/metrics:
@@ -138,15 +126,21 @@ plots:
     x: step
 - dvclive/Wheeler, Zack_logs/plots/metrics:
     x: step
+- dvclive/Blanco, Ronel_logs/plots/metrics:
+    x: step
+- dvclive/Keller, Mitch_logs/plots/metrics:
+    x: step
+- dvclive/Sale, Chris_logs/plots/metrics:
+    x: step
+- dvclive/Fedde, Erick_logs/plots/metrics:
+    x: step
+- dvclive/Brown, Hunter_logs/plots/metrics:
+    x: step
+- dvclive/Flexen, Chris_logs/plots/metrics:
+    x: step
 metrics:
 - dvclive/Cole, Gerrit_logs/metrics.json
 - dvclive/Gallen, Zac_logs/metrics.json
-- dvclive/Blanco, Ronel_logs/metrics.json
-- dvclive/Brown, Hunter_logs/metrics.json
-- dvclive/Flexen, Chris_logs/metrics.json
-- dvclive/Fedde, Erick_logs/metrics.json
-- dvclive/Keller, Mitch_logs/metrics.json
-- dvclive/Sale, Chris_logs/metrics.json
 - dvclive/Berríos, José_logs/metrics.json
 - dvclive/Bibee, Tanner_logs/metrics.json
 - dvclive/Kirby, George_logs/metrics.json
@@ -191,3 +185,9 @@ metrics:
 - dvclive/Castillo, Luis_logs/metrics.json
 - dvclive/Pfaadt, Brandon_logs/metrics.json
 - dvclive/Wheeler, Zack_logs/metrics.json
+- dvclive/Blanco, Ronel_logs/metrics.json
+- dvclive/Keller, Mitch_logs/metrics.json
+- dvclive/Sale, Chris_logs/metrics.json
+- dvclive/Fedde, Erick_logs/metrics.json
+- dvclive/Brown, Hunter_logs/metrics.json
+- dvclive/Flexen, Chris_logs/metrics.json
