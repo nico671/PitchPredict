@@ -8,6 +8,13 @@ import polars as pl
 import pybaseball as pb
 import yaml
 
+from src.utils.utils import (
+    create_count_feature,
+    create_state_feature,
+    create_target,
+    sort_by_date,
+)
+
 logger = logging.getLogger("featurize")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
@@ -15,32 +22,6 @@ handler.setFormatter(
     logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 )
 logger.addHandler(handler)
-
-
-def create_count_feature(df):
-    df = df.with_columns(
-        (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
-        .alias("count")
-        .cast(pl.Categorical)
-        .to_physical()
-    )
-    return df.drop(["balls", "strikes"])
-
-
-def create_target(df):
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
-    # create target variable
-    return df.with_columns(
-        df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
-    ).drop_nulls("next_pitch")
 
 
 def main():
@@ -62,17 +43,7 @@ def main():
     input_file_path = params["featurize"]["input_data_path"]
 
     df = pl.read_parquet(Path(input_file_path))
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
-
-    df.head()
+    df = sort_by_date(df)
 
     df = df.with_columns(
         df.select(
@@ -90,23 +61,7 @@ def main():
     df = create_count_feature(df)
 
     # create base state feature
-    df = df.with_columns(
-        pl.col("on_1b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_1b"),
-        pl.col("on_2b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_2b"),
-        pl.col("on_3b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_3b"),
-    )
-    df = df.with_columns(
-        (pl.col("on_1b") * 3 + pl.col("on_2b") * 5 + pl.col("on_3b") * 7).alias(
-            "base_state"
-        )
-    )
-    df = df.drop(["on_1b", "on_2b", "on_3b"])
+    df = create_state_feature(df)
 
     # create run_diff feature
     df = df.with_columns(
@@ -121,15 +76,7 @@ def main():
         .over(["player_name", "game_date", "game_pk"])
         .alias("pitches_thrown_curr_game")
     )
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    df = sort_by_date(df)
 
     batting_df = pb.batting_stats_bref(params["clean"]["start_year"])
     print(batting_df.columns)
@@ -168,7 +115,7 @@ def main():
         logger.error("next_pitch not in columns")
         sys.exit(1)
 
-    features = df.columns
+    features = []
     features_path = Path(params["train"]["features_path"])
     with open(features_path, "r") as f:
         for item in f.readlines():
@@ -181,15 +128,7 @@ def main():
 
     # Create the output DataFrame
     output_df = df
-    output_df = output_df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    output_df = sort_by_date(output_df)
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
