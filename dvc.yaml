@@ -42,15 +42,11 @@ plots:
     x: step
 - dvclive/Flaherty, Jack_logs/plots/metrics:
     x: step
-- dvclive/Bello, Brayan_logs/plots/metrics:
-    x: step
 - dvclive/Morton, Charlie_logs/plots/metrics:
     x: step
 - dvclive/Skubal, Tarik_logs/plots/metrics:
     x: step
 - dvclive/Kikuchi, Yusei_logs/plots/metrics:
-    x: step
-- dvclive/Sánchez, Cristopher_logs/plots/metrics:
     x: step
 - dvclive/Nola, Aaron_logs/plots/metrics:
     x: step
@@ -138,16 +134,18 @@ plots:
     x: step
 - dvclive/Burnes, Corbin_logs/plots/metrics:
     x: step
+- dvclive/Bello, Brayan_logs/plots/metrics:
+    x: step
+- dvclive/Sánchez, Cristopher_logs/plots/metrics:
+    x: step
 metrics:
 - dvclive/Cole, Gerrit_logs/metrics.json
 - dvclive/Gallen, Zac_logs/metrics.json
 - dvclive/Bibee, Tanner_logs/metrics.json
 - dvclive/Flaherty, Jack_logs/metrics.json
-- dvclive/Bello, Brayan_logs/metrics.json
 - dvclive/Morton, Charlie_logs/metrics.json
 - dvclive/Skubal, Tarik_logs/metrics.json
 - dvclive/Kikuchi, Yusei_logs/metrics.json
-- dvclive/Sánchez, Cristopher_logs/metrics.json
 - dvclive/Nola, Aaron_logs/metrics.json
 - dvclive/Bassitt, Chris_logs/metrics.json
 - dvclive/Valdez, Framber_logs/metrics.json
@@ -191,3 +189,5 @@ metrics:
 - dvclive/López, Pablo_logs/metrics.json
 - dvclive/Sears, JP_logs/metrics.json
 - dvclive/Burnes, Corbin_logs/metrics.json
+- dvclive/Bello, Brayan_logs/metrics.json
+- dvclive/Sánchez, Cristopher_logs/metrics.json
