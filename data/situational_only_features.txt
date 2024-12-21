@@ -1,5 +1,4 @@
 stand
-is_high_pressure
 zone
 count
 inning_topbot

@@ -174,6 +174,7 @@ def main():
         sys.exit(1)
 
     df = pl.read_parquet(Path(params["train"]["input_data_path"]))
+
     pitcher_data = training_loop(df, params)
 
     output_dir = Path("data/evaluate/")

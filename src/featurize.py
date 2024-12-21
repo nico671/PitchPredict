@@ -114,25 +114,31 @@ def main():
         logger.error("next_pitch not in columns")
         sys.exit(1)
 
-    features = df.columns
-    features_path = Path(params["train"]["features_path"])
-    features = list(set(features))
-    with open(features_path, "w") as f:
-        for item in features:
-            if item not in [
-                "next_pitch",
-                "pitcher",
-                "player_name",
-                "game_date",
-                "batter",
-            ]:
-                f.write(f"{item}\n")
+    # features = df.columns
+    # features_path = Path(params["train"]["features_path"])
+    # features = list(set(features))
+    # with open(features_path, "w") as f:
+    #     for item in features:
+    #         if item not in [
+    #             "next_pitch",
+    #             "pitcher",
+    #             "player_name",
+    #             "game_date",
+    #             "batter",
+    #         ]:
+    #             f.write(f"{item}\n")
 
-    df = df.fill_null(-1)
+    null_counts = df.null_count()
+    if not null_counts.is_empty():
+        print(
+            "Warning: NaN values found in columns:",
+            [col for col, count in zip(df.columns, null_counts.row(0)) if count > 0],
+        )
+    df = df.drop_nulls("next_pitch")
     df = df.fill_nan(-1)
+    df = df.fill_null(-1)
     # Create the output DataFrame
-    output_df = df
-    output_df = sort_by_date(output_df)
+    output_df = sort_by_date(df)
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)

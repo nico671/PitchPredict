@@ -89,8 +89,9 @@ def main():
     top_k_pitchers_list = top_k_pitchers.collect().get_column("pitcher").to_list()
     df = df.filter(pl.col("pitcher").is_in(top_k_pitchers_list))
 
-    # drop rows with null values in the columns 'pitch_type' and 'pitcher', as they cant be used for training
-    df = df.drop_nulls(subset=["pitch_type", "pitcher"])
+    # drop rows with null values in the columns 'release_speed' and 'release_pos_x', as they cant be used for training
+    df = df.fill_nan(-1)
+    df = df.fill_null(-1)
 
     df.sink_parquet(params["featurize"]["input_data_path"])
     end_time = time.time()

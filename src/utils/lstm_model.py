@@ -4,9 +4,6 @@ import numpy as np
 import tensorflow as tf
 import yaml
 
-from dvclive import Live
-from dvclive.keras import DVCLiveCallback
-
 params = Path("params.yaml")
 with open(params, "r") as file:
     params = yaml.safe_load(file)
@@ -46,7 +43,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
             min_lr=1e-6,
         ),
         # metric logging callback to log metrics to dvclive
-        DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
+        # DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
 
     history = model.fit(
@@ -69,7 +66,7 @@ def create_model(input_shape, num_classes):
             LSTM_UNITS,
             return_sequences=True,
             dropout=DROPOUT,
-            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+            # kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
     if BATCH_NORMALIZATION:
@@ -79,7 +76,7 @@ def create_model(input_shape, num_classes):
             LSTM_UNITS,
             return_sequences=True,
             dropout=DROPOUT,
-            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+            # kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
     if BATCH_NORMALIZATION:
@@ -88,7 +85,7 @@ def create_model(input_shape, num_classes):
         tf.keras.layers.LSTM(
             LSTM_UNITS,
             dropout=DROPOUT,
-            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+            # kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
     if BATCH_NORMALIZATION:
