@@ -38,8 +38,6 @@ plots:
     x: step
 - dvclive/Gallen, Zac_logs/plots/metrics:
     x: step
-- dvclive/Berríos, José_logs/plots/metrics:
-    x: step
 - dvclive/Bibee, Tanner_logs/plots/metrics:
     x: step
 - dvclive/Kirby, George_logs/plots/metrics:
@@ -138,10 +136,11 @@ plots:
     x: step
 - dvclive/Flexen, Chris_logs/plots/metrics:
     x: step
+- dvclive/Berríos, José_logs/plots/metrics:
+    x: step
 metrics:
 - dvclive/Cole, Gerrit_logs/metrics.json
 - dvclive/Gallen, Zac_logs/metrics.json
-- dvclive/Berríos, José_logs/metrics.json
 - dvclive/Bibee, Tanner_logs/metrics.json
 - dvclive/Kirby, George_logs/metrics.json
 - dvclive/King, Michael_logs/metrics.json
@@ -191,3 +190,4 @@ metrics:
 - dvclive/Fedde, Erick_logs/metrics.json
 - dvclive/Brown, Hunter_logs/metrics.json
 - dvclive/Flexen, Chris_logs/metrics.json
+- dvclive/Berríos, José_logs/metrics.json
