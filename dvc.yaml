@@ -54,9 +54,9 @@ plots:
     x: step
 - dvclive/Cease, Dylan_logs/plots/metrics:
     x: step
-- dvclive/Ragans, Cole_logs/plots/metrics:
-    x: step
 - dvclive/Peralta, Freddy_logs/plots/metrics:
+    x: step
+- dvclive/Ragans, Cole_logs/plots/metrics:
     x: step
 metrics:
 - dvclive/Fedde, Erick_logs/metrics.json
@@ -69,5 +69,5 @@ metrics:
 - dvclive/Gallen, Zac_logs/metrics.json
 - dvclive/Nola, Aaron_logs/metrics.json
 - dvclive/Cease, Dylan_logs/metrics.json
-- dvclive/Ragans, Cole_logs/metrics.json
 - dvclive/Peralta, Freddy_logs/metrics.json
+- dvclive/Ragans, Cole_logs/metrics.json

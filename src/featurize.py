@@ -3,7 +3,6 @@ import sys
 import time
 from pathlib import Path
 
-# import pandas as pd
 import polars as pl
 import pybaseball as pb
 import yaml
@@ -56,6 +55,7 @@ def main():
 
     # create target variable
     df = create_target(df)
+    df = df.drop_nulls("next_pitch")
 
     # create count feature
     df = create_count_feature(df)
@@ -134,7 +134,7 @@ def main():
             "Warning: NaN values found in columns:",
             [col for col, count in zip(df.columns, null_counts.row(0)) if count > 0],
         )
-    df = df.drop_nulls("next_pitch")
+
     df = df.fill_nan(-1)
     df = df.fill_null(-1)
     # Create the output DataFrame

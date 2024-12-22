@@ -53,6 +53,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
+        class_weight=calculate_class_weights(y_train),
     )
 
     return history
@@ -66,7 +67,7 @@ def create_model(input_shape, num_classes):
             LSTM_UNITS,
             return_sequences=True,
             dropout=DROPOUT,
-            # kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
     if BATCH_NORMALIZATION:
@@ -76,7 +77,7 @@ def create_model(input_shape, num_classes):
             LSTM_UNITS,
             return_sequences=True,
             dropout=DROPOUT,
-            # kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
     if BATCH_NORMALIZATION:
@@ -85,7 +86,7 @@ def create_model(input_shape, num_classes):
         tf.keras.layers.LSTM(
             LSTM_UNITS,
             dropout=DROPOUT,
-            # kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
     if BATCH_NORMALIZATION:
