@@ -90,6 +90,7 @@ def main():
     df = create_count_feature(df)
 
     # create base state feature
+    df = df.with_columns(df.select(["on_1b", "on_2b", "on_3b"]).fill_null(-1))
     df = df.with_columns(
         pl.col("on_1b")
         .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)

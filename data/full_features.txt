@@ -17,8 +17,6 @@ plate_x
 plate_z
 outs_when_up
 inning
-hc_x
-hc_y
 vx0
 vy0
 vz0
