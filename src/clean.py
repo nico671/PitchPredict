@@ -43,6 +43,7 @@ def main():
     df = df.drop(
         [
             "Unnamed: 0",
+            "events",
             "spin_dir",
             "spin_rate_deprecated",
             "break_angle_deprecated",
@@ -76,6 +77,8 @@ def main():
             "post_fld_score",
             "delta_home_win_exp",
             "delta_run_exp",
+            "p_throws",
+            "zone",
         ]
     )
 
