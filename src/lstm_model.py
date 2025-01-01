@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import numpy as np
 import tensorflow as tf
 import yaml
 
@@ -95,13 +94,3 @@ def create_model(input_shape, num_classes):
         model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.Dense(num_classes, activation="softmax"))
     return model
-
-
-def calculate_class_weights(y):
-    proportions = np.bincount(y) / len(y)
-    for i, proportion in enumerate(proportions):
-        if proportion == 0:
-            proportions[i] = 1e-6
-    inverseN = 1 / len(proportions)
-    weights = [inverseN / proportion for proportion in proportions]
-    return {i: w for i, w in enumerate(weights)}

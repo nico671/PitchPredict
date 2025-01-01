@@ -10,7 +10,7 @@ train:
   features_path: data/full_features.txt
   dropout: 0.1 # keep this at 0.1
   patience: 10
-  kernel_regularizer: 0.01 # keep this at 0.01
+  kernel_regularizer: 0.00 # keep this at 0.01
   batch_normalization: true
   batch_size: 32
   time_steps: 25

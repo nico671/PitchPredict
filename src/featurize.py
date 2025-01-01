@@ -17,6 +17,19 @@ handler.setFormatter(
 logger.addHandler(handler)
 
 
+def sort_pitch_data(df):
+    return df.sort(
+        [
+            "game_date",  # Primary: chronological order
+            "game_pk",  # Secondary: unique game identifier
+            "inning",  # Tertiary: game sequence
+            "at_bat_number",  # Game at-bat order
+            "pitch_number",  # At-bat pitch sequence
+        ],
+        descending=False,  # Ascending order for all
+    )
+
+
 def create_count_feature(df):
     df = df.with_columns(
         (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
@@ -28,19 +41,46 @@ def create_count_feature(df):
 
 
 def create_target(df):
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    df = sort_pitch_data(df)
     # create target variable
     return df.with_columns(
         df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
     ).drop_nulls("next_pitch")
+
+
+def create_rolling_features(df, window_size=5):
+    df = df.with_columns(
+        [
+            pl.col("release_speed")
+            .rolling_mean(window_size)
+            .alias("rolling_pitch_speed"),
+            pl.col("release_spin_rate")
+            .rolling_mean(window_size)
+            .alias("rolling_spin_rate"),
+            pl.col("release_extension")
+            .rolling_mean(window_size)
+            .alias("rolling_release_extension"),
+        ]
+    )
+    return df
+
+
+def handle_missing_values(df):
+    df = df.fill_null(-1)
+    df = df.fill_nan(-1)
+    return df
+
+
+def encode_categorical_features(df):
+    df = df.with_columns(
+        df.select(
+            pl.col(pl.String)
+            .exclude(["player_name"])
+            .cast(pl.Categorical)
+            .to_physical()
+        ),
+    )
+    return df
 
 
 def main():
@@ -62,26 +102,10 @@ def main():
     input_file_path = params["featurize"]["input_data_path"]
 
     df = pl.read_parquet(Path(input_file_path))
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
 
-    df.head()
+    df = sort_pitch_data(df)
 
-    df = df.with_columns(
-        df.select(
-            pl.col(pl.String)
-            .exclude(["player_name"])
-            .cast(pl.Categorical)
-            .to_physical()
-        ),
-    )
+    df = encode_categorical_features(df)
 
     # create target variable
     df = create_target(df)
@@ -116,24 +140,46 @@ def main():
     df = df.drop(["fld_score", "bat_score"])
 
     # calculate current game pitch count
-    df = df.with_columns(
-        pl.col("pitch_type")
-        .cum_count(reverse=False)
-        .over(["player_name", "game_date", "game_pk"])
-        .alias("pitches_thrown_curr_game")
+    # df = df.with_columns(
+    #     pl.col("pitch_type")
+    #     .cum_count(reverse=False)
+    #     .over(["player_name", "game_date", "game_pk"])
+    #     .alias("pitches_thrown_curr_game")
+    # )
+
+    df = df.drop(
+        df.select(pl.all().is_null().sum() / df.height)
+        .unpivot()
+        .filter(pl.col("value") > 0.05)
+        .select("variable")
+        .to_series()
+        .to_list()
     )
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    sort_pitch_data(df)
+
+    # Add rolling features
+    df = create_rolling_features(df)
+
+    # Handle missing values
+
+    # df = df.with_columns(
+    #     [
+    #         (pl.col("release_extension").mean() - pl.col("release_extension")).alias(
+    #             "release_extension_consistency"
+    #         ),
+    #         (pl.col("release_pos_x").mean() - pl.col("release_pos_x")).alias(
+    #             "release_pos_x_consistency"
+    #         ),
+    #         (pl.col("release_pos_y").mean() - pl.col("release_pos_y")).alias(
+    #             "release_pos_y_consistency"
+    #         ),
+    #         (pl.col("release_pos_z").mean() - pl.col("release_pos_z")).alias(
+    #             "release_pos_z_consistency"
+    #         ),
+    #     ]
+    # )
 
     batting_df = pb.batting_stats_bref(params["clean"]["start_year"])
-    print(batting_df.columns)
     player_ids = list(df.select("batter").unique().to_pandas()["batter"])
     batting_df = pl.DataFrame(batting_df[batting_df["mlbID"].isin(player_ids)])
     batting_df = batting_df.drop(
@@ -148,14 +194,6 @@ def main():
             "AB",
             "R",
             "H",
-            "2B",
-            "3B",
-            "HR",
-            "RBI",
-            "BB",
-            "IBB",
-            "SO",
-            "HBP",
             "SH",
             "SF",
             "GDP",
@@ -169,34 +207,14 @@ def main():
         logger.error("next_pitch not in columns")
         sys.exit(1)
 
-    features = df.columns
-    features_path = Path(params["train"]["features_path"])
-    with open(features_path, "r") as f:
-        for item in f.readlines():
-            if item not in ["next_pitch", "pitcher", "player_name", "game_date"]:
-                features.append(item.strip())
-    features = list(set(features))
-
-    df = df.fill_null(-1)
-    df = df.fill_nan(-1)
-
-    # Create the output DataFrame
-    output_df = df
-    output_df = output_df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    df = handle_missing_values(df)
+    df = sort_pitch_data(df)
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(output_dir / "2015_2024_statcast_train.parquet")
     # Write to Parquet file
-    output_df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
+    df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
     end_time = time.time()
     logger.info(f"Time taken: {end_time - start_time:.2f} seconds")
     logger.info("done")

@@ -85,10 +85,10 @@ def create_training_data(pitcher_df, features):
     )
 
     # hidden until i figure out how to handle this problem
-    logger.info(f"Unique classes: {len(np.unique(y))}")
-    logger.info(f"Classes missing from test: {len(np.setdiff1d(y, y_test))}")
-    logger.info(f"Classes missing from train: {len(np.setdiff1d(y, y_train))}")
-    logger.info(f"Classes missing from val: {len(np.setdiff1d(y, y_val))}")
+    # logger.info(f"Unique classes: {len(np.unique(y))}")
+    # logger.info(f"Classes missing from test: {len(np.setdiff1d(y, y_test))}")
+    # logger.info(f"Classes missing from train: {len(np.setdiff1d(y, y_train))}")
+    # logger.info(f"Classes missing from val: {len(np.setdiff1d(y, y_val))}")
 
     return (
         X_train_scaled,
@@ -104,11 +104,17 @@ def create_training_data(pitcher_df, features):
 def training_loop(df, params):
     pitcher_data = {}
     count = 0
-    features = []
-    features_path = Path(params["train"]["features_path"])
-    with open(features_path, "r") as f:
-        for item in f.readlines():
-            features.append(item.strip())
+    features = df.columns
+    for feature in [
+        "next_pitch",
+        "pitcher",
+        "player_name",
+        "game_date",
+        "game_pk",
+        "pitch_type",
+        "type",
+    ]:
+        features.remove(feature)
     start_time = time.time()
     for pitcher_df in df.group_by("pitcher"):
         pitcher_code = pitcher_df[0]

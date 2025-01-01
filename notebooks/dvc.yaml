@@ -7,6 +7,11 @@ metrics:
 - dvclive/Sale, Chris_logs/metrics.json
 - dvclive/Berríos, José_logs/metrics.json
 - dvclive/Bibee, Tanner_logs/metrics.json
+- dvclive/Scherzer, Max_logs/metrics.json
+- dvclive/Cole, Gerrit_logs/metrics.json
+- dvclive/Gausman, Kevin_logs/metrics.json
+- dvclive/Gibson, Kyle_logs/metrics.json
+- dvclive/Nola, Aaron_logs/metrics.json
 plots:
 - dvclive/Flexen, Chris_logs/plots/metrics:
     x: step
@@ -23,4 +28,14 @@ plots:
 - dvclive/Berríos, José_logs/plots/metrics:
     x: step
 - dvclive/Bibee, Tanner_logs/plots/metrics:
+    x: step
+- dvclive/Scherzer, Max_logs/plots/metrics:
+    x: step
+- dvclive/Cole, Gerrit_logs/plots/metrics:
+    x: step
+- dvclive/Gausman, Kevin_logs/plots/metrics:
+    x: step
+- dvclive/Gibson, Kyle_logs/plots/metrics:
+    x: step
+- dvclive/Nola, Aaron_logs/plots/metrics:
     x: step
