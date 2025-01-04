@@ -3,9 +3,6 @@ from pathlib import Path
 import tensorflow as tf
 import yaml
 
-from dvclive import Live
-from dvclive.keras import DVCLiveCallback
-
 params = Path("params.yaml")
 with open(params, "r") as file:
     params = yaml.safe_load(file)
@@ -20,32 +17,33 @@ LSTM_UNITS = params["train"]["lstm_units"]
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     optimizer = tf.keras.optimizers.Adam(
-        learning_rate=1e-4,  # - learning_rate: controls how much to change the model in response to the estimated error each time the model weights are updated.
-        clipnorm=1.0,  # - clipnorm: clips gradients by norm; helps prevent exploding gradients.
-        weight_decay=1e-4,  # - weight_decay: adds a penalty to the loss function to prevent overfitting.
+        learning_rate=1e-4,  # Start higher
+        clipnorm=1.0,
+        weight_decay=1e-5,
+        # momentum=0.8,
     )
     model.compile(
         optimizer=optimizer,
-        loss="sparse_categorical_crossentropy",
-        metrics=["sparse_categorical_accuracy"],
+        loss=tf.keras.losses.CategoricalCrossentropy(),  # Use focal loss
+        metrics=["accuracy"],
     )
 
     callbacks = [
-        # early stopping callback to stop training when the model is not improving
-        tf.keras.callbacks.EarlyStopping(
-            monitor="val_sparse_categorical_accuracy",
-            patience=PATIENCE,
-            restore_best_weights=True,
-        ),
-        # reduce learning rate on plateau callback to reduce the learning rate when the model is not improving
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss",
-            factor=0.2,
-            patience=PATIENCE,
-            min_lr=1e-6,
-        ),
+        # # early stopping callback to stop training when the model is not improving
+        # tf.keras.callbacks.EarlyStopping(
+        #     monitor="val_accuracy",
+        #     patience=PATIENCE,
+        #     restore_best_weights=True,
+        # ),
+        # # reduce learning rate on plateau callback to reduce the learning rate when the model is not improving
+        # tf.keras.callbacks.ReduceLROnPlateau(
+        #     monitor="val_accuracy",
+        #     factor=0.7,
+        #     patience=2,
+        #     min_lr=1e-6,
+        # ),
         # metric logging callback to log metrics to dvclive
-        DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
+        # DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
 
     history = model.fit(
@@ -71,21 +69,17 @@ def create_model(input_shape, num_classes):
             kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
-    if BATCH_NORMALIZATION:
-        model.add(tf.keras.layers.BatchNormalization())
     model.add(
         tf.keras.layers.LSTM(
-            LSTM_UNITS,
+            LSTM_UNITS // 2,
             return_sequences=True,
             dropout=DROPOUT,
             kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
-    if BATCH_NORMALIZATION:
-        model.add(tf.keras.layers.BatchNormalization())
     model.add(
         tf.keras.layers.LSTM(
-            LSTM_UNITS,
+            LSTM_UNITS // 4,
             dropout=DROPOUT,
             kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )

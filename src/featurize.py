@@ -3,7 +3,6 @@ import sys
 import time
 from pathlib import Path
 
-# import pandas as pd
 import polars as pl
 import pybaseball as pb
 import yaml
@@ -17,19 +16,6 @@ handler.setFormatter(
 logger.addHandler(handler)
 
 
-def sort_pitch_data(df):
-    return df.sort(
-        [
-            "game_date",  # Primary: chronological order
-            "game_pk",  # Secondary: unique game identifier
-            "inning",  # Tertiary: game sequence
-            "at_bat_number",  # Game at-bat order
-            "pitch_number",  # At-bat pitch sequence
-        ],
-        descending=False,  # Ascending order for all
-    )
-
-
 def create_count_feature(df):
     df = df.with_columns(
         (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
@@ -41,7 +27,15 @@ def create_count_feature(df):
 
 
 def create_target(df):
-    df = sort_pitch_data(df)
+    df = df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=False,
+    )
     # create target variable
     return df.with_columns(
         df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
@@ -103,7 +97,15 @@ def main():
 
     df = pl.read_parquet(Path(input_file_path))
 
-    df = sort_pitch_data(df)
+    df = df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=False,
+    )
 
     df = encode_categorical_features(df)
 
@@ -111,41 +113,42 @@ def main():
     df = create_target(df)
 
     # create count feature
-    df = create_count_feature(df)
+    # df = create_count_feature(df)
 
     # create base state feature
-    df = df.with_columns(df.select(["on_1b", "on_2b", "on_3b"]).fill_null(-1))
-    df = df.with_columns(
-        pl.col("on_1b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_1b"),
-        pl.col("on_2b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_2b"),
-        pl.col("on_3b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_3b"),
-    )
-    df = df.with_columns(
-        (pl.col("on_1b") * 3 + pl.col("on_2b") * 5 + pl.col("on_3b") * 7).alias(
-            "base_state"
-        )
-    )
-    df = df.drop(["on_1b", "on_2b", "on_3b"])
+    # df = df.with_columns(df.select(["on_1b", "on_2b", "on_3b"]).fill_null(-1))
+    # df = df.with_columns(
+    #     pl.col("on_1b")
+    #     .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+    #     .alias("on_1b"),
+    #     pl.col("on_2b")
+    #     .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+    #     .alias("on_2b"),
+    #     pl.col("on_3b")
+    #     .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+    #     .alias("on_3b"),
+    # )
+    # df = df.with_columns(
+    #     (pl.col("on_1b") * 3 + pl.col("on_2b") * 5 + pl.col("on_3b") * 7).alias(
+    #         "base_state"
+    #     )
+    # )
+    # df = df.drop(["on_1b", "on_2b", "on_3b"])
 
     # create run_diff feature
-    df = df.with_columns(
-        (pl.col("fld_score") - pl.col("bat_score")).alias("run_diff").cast(pl.Int32),
-    )
-    df = df.drop(["fld_score", "bat_score"])
-
-    # calculate current game pitch count
     # df = df.with_columns(
-    #     pl.col("pitch_type")
-    #     .cum_count(reverse=False)
-    #     .over(["player_name", "game_date", "game_pk"])
-    #     .alias("pitches_thrown_curr_game")
+    #     (pl.col("fld_score") - pl.col("bat_score")).alias("run_diff").cast(pl.Int32),
     # )
+    # df = df.drop(["fld_score", "bat_score"])
+    df = df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=False,
+    )
 
     df = df.drop(
         df.select(pl.all().is_null().sum() / df.height)
@@ -155,12 +158,12 @@ def main():
         .to_series()
         .to_list()
     )
-    sort_pitch_data(df)
 
     # Add rolling features
-    df = create_rolling_features(df)
+    # df = create_rolling_features(df)
 
     # Handle missing values
+    df = handle_missing_values(df)
 
     # df = df.with_columns(
     #     [
@@ -192,29 +195,36 @@ def main():
             "G",
             "PA",
             "AB",
-            "R",
-            "H",
+            "SO",
+            "HBP",
             "SH",
             "SF",
-            "GDP",
             "SB",
             "CS",
         ]
     )
     df = df.join(batting_df, left_on="batter", right_on="mlbID", how="left")
 
-    if "next_pitch" not in df.columns:
-        logger.error("next_pitch not in columns")
-        sys.exit(1)
+    df = df.fill_null(-1)
+    df = df.fill_nan(-1)
 
-    df = handle_missing_values(df)
-    df = sort_pitch_data(df)
+    # Create the output DataFrame
+    output_df = df
+    output_df = output_df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=False,
+    )
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
     logger.info(output_dir / "2015_2024_statcast_train.parquet")
     # Write to Parquet file
-    df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
+    output_df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
     end_time = time.time()
     logger.info(f"Time taken: {end_time - start_time:.2f} seconds")
     logger.info("done")

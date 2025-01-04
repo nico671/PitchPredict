@@ -9,8 +9,8 @@ from statistics import mean
 import numpy as np
 import polars as pl
 import yaml
-from sklearn.calibration import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.utils import to_categorical
 
 from lstm_model import compile_and_fit, create_model
 
@@ -52,20 +52,15 @@ def create_training_data(pitcher_df, features):
     X = pitcher_df.select(pl.col(features)).to_numpy()
     y = pitcher_df.select(pl.col("next_pitch")).to_numpy().ravel()
 
-    # encode target variable
-    label_encoder = LabelEncoder()
-    y_encoded = label_encoder.fit_transform(y)
-    y = y_encoded
-
     # declare time steps
     time_steps = params["train"]["time_steps"]
 
     X_seq, y_seq = create_sequences(X, y, time_steps)
-
     # convert to correct datatypes for model
     X_seq = X_seq.astype("float32")
     y_seq = y_seq.astype("int32")  # Ensure labels are integers
-
+    num_classes = np.max(y_seq) + 1
+    y_seq = to_categorical(y_seq, num_classes=num_classes)
     # split into train, test, val
     train_split = params["train"]["train_split"]
     train_size = int(len(X_seq) * train_split)
@@ -73,7 +68,28 @@ def create_training_data(pitcher_df, features):
     X_train, X_val, X_test = np.split(X_seq, [train_size, train_size + val_size])
     y_train, y_val, y_test = np.split(y_seq, [train_size, train_size + val_size])
 
-    # scale features, no reason for minmax tbh, just read a stackoverflow that recommended it
+    # def preprocess_data(X, y, min_class_percentage=0.5):
+    #     # Remove rare classes
+    #     class_percentages = y.sum(axis=0) / len(y)
+    #     valid_classes = np.where(class_percentages >= min_class_percentage / 100)[0]
+
+    #     # Keep only valid classes
+    #     y_filtered = y[:, valid_classes]
+
+    #     # Find samples with valid labels
+    #     valid_samples = y_filtered.sum(axis=1) > 0
+    #     X_filtered = X[valid_samples]
+    #     y_filtered = y_filtered[valid_samples]
+
+    #     # Clip feature values
+    #     X_filtered = np.clip(X_filtered, -3, 3)
+
+    #     return X_filtered, y_filtered, len(valid_classes)
+
+    # # Update training pipeline
+    # X_train, y_train, num_classes = preprocess_data(X_train, y_train)
+    # X_val, y_val, _ = preprocess_data(X_val, y_val)
+    # scale features
     scaler = MinMaxScaler()
     n_samples, n_timesteps, n_features = X_train.shape
     X_train_reshaped = X_train.reshape(-1, n_features)
@@ -84,7 +100,6 @@ def create_training_data(pitcher_df, features):
         X_test.shape
     )
 
-    # hidden until i figure out how to handle this problem
     # logger.info(f"Unique classes: {len(np.unique(y))}")
     # logger.info(f"Classes missing from test: {len(np.setdiff1d(y, y_test))}")
     # logger.info(f"Classes missing from train: {len(np.setdiff1d(y, y_train))}")
@@ -97,7 +112,7 @@ def create_training_data(pitcher_df, features):
         y_val,
         X_test_scaled,
         y_test,
-        label_encoder,
+        num_classes,
     )
 
 
@@ -113,8 +128,10 @@ def training_loop(df, params):
         "game_pk",
         "pitch_type",
         "type",
+        "batter",
     ]:
         features.remove(feature)
+    print(features)
     start_time = time.time()
     for pitcher_df in df.group_by("pitcher"):
         pitcher_code = pitcher_df[0]
@@ -125,11 +142,26 @@ def training_loop(df, params):
         logger.info(
             f"Training model for pitcher: {pitcher_name} - {num_pitches} pitches"
         )
-        X_train, y_train, X_val, y_val, X_test, y_test, label_encoder = (
+        X_train, y_train, X_val, y_val, X_test, y_test, num_classes = (
             create_training_data(pitcher_df, features)
         )
+        print("\nData Shapes:")
+        print(f"X_train: {X_train.shape}")
+        print(f"y_train: {y_train.shape}")
+        print(f"X_val: {X_val.shape}")
+        print(f"y_val: {y_val.shape}")
 
-        lstm_model = create_model(X_train.shape[1:], len(label_encoder.classes_))
+        print("\nLabel Distribution:")
+        for i in range(y_train.shape[1]):
+            print(f"Class {i}: {y_train[:,i].sum() / len(y_train):.2%}")
+
+        print("\nFeature Statistics:")
+        print(f"X_train mean: {X_train.mean():.3f}")
+        print(f"X_train std: {X_train.std():.3f}")
+        print(f"X_train min: {X_train.min():.3f}")
+        print(f"X_train max: {X_train.max():.3f}")
+
+        lstm_model = create_model(X_train.shape[1:], num_classes)
         history = compile_and_fit(
             lstm_model,
             X_train,
@@ -151,17 +183,16 @@ def training_loop(df, params):
             "test_loss": test_loss,
             "test_accuracy": test_accuracy,
             "total_pitches": len(y_test) + len(y_train) + len(y_val),
-            "unique_classes": len(np.unique(y_train)),
+            "unique_classes": len(np.unique(np.concatenate([y_train, y_val, y_test]))),
             "player_name": pitcher_name,
             "X_test": X_test,
             "y_test": y_test,
-            "label_encoder": label_encoder,
             "most_common_pitch_rate": most_common_pitch_rate,
             "performance_gain": (test_accuracy - most_common_pitch_rate) * 100,
         }
         logger.info(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}")
         logger.info(
-            f" Accuracy Gained over guessing most common pitch for {pitcher_name}: {pitcher_data[pitcher_code]["performance_gain"]:.2f}%",
+            f" Accuracy Gained over guessing most common pitch for {pitcher_name}: {pitcher_data[pitcher_code]['performance_gain']:.2f}%",
         )
         logger.info(
             f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data])*100:.2f}%"

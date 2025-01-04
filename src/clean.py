@@ -13,6 +13,9 @@ handler.setFormatter(
 )
 logger.addHandler(handler)
 
+with open("params.yaml", "r") as file:
+    params = yaml.safe_load(file)
+
 
 def main():
     start_time = time.time()
@@ -28,16 +31,10 @@ def main():
             "Please enter a valid python source file as the first input for this stage"
         )
         sys.exit(1)
-    with open("params.yaml", "r") as file:
-        params = yaml.safe_load(file)
     input_file_path = params["clean"]["input_data_path"]
 
     # read in the complete data frame
     df = pl.scan_parquet(input_file_path)
-
-    # filter to correct years
-    df = df.with_columns(pl.col("game_date").str.to_datetime())
-    df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
 
     # drop columns that will never be used
     df = df.drop(
@@ -71,16 +68,27 @@ def main():
             "fielder_8",
             "fielder_9",
             "pitch_name",
-            "post_away_score",
-            "post_home_score",
-            "post_bat_score",
-            "post_fld_score",
-            "delta_home_win_exp",
-            "delta_run_exp",
             "p_throws",
             "zone",
+            "if_fielding_alignment",
+            "of_fielding_alignment",
+            "inning_topbot",
+            "vx0",
+            "vy0",
+            "vz0",
+            "sz_top",
+            "sz_bot",
+            "effective_speed",
+            "pfx_x",
+            "pfx_z",
+            "plate_x",
+            "plate_z",
         ]
     )
+
+    # filter to correct years
+    df = df.with_columns(pl.col("game_date").str.to_datetime())
+    df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
 
     # drop rows with null values in the columns 'pitch_type' and 'pitcher', as they cant be used for training
     df = df.drop_nulls(subset=["pitch_type", "pitcher"])
