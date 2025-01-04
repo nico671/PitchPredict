@@ -4,75 +4,23 @@ import time
 from pathlib import Path
 
 import polars as pl
-import pybaseball as pb
 import yaml
+
+from src.utils.featurize_utils import (
+    add_batting_stats,
+    create_base_state_feature,
+    create_count_feature,
+    create_run_diff_feature,
+    create_target,
+    encode_categorical_features,
+    handle_missing_values,
+)
 
 logger = logging.getLogger("feats of epic proportions")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
-
-
-def create_count_feature(df):
-    df = df.with_columns(
-        (pl.col("balls").cast(pl.String) + " - " + pl.col("strikes").cast(pl.String))
-        .alias("count")
-        .cast(pl.Categorical)
-        .to_physical()
-    )
-    return df.drop(["balls", "strikes"])
-
-
-def create_target(df):
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
-    # create target variable
-    return df.with_columns(
-        df.select(pl.col("pitch_type").shift().alias("next_pitch")),
-    ).drop_nulls("next_pitch")
-
-
-def create_rolling_features(df, window_size=5):
-    df = df.with_columns(
-        [
-            pl.col("release_speed")
-            .rolling_mean(window_size)
-            .alias("rolling_pitch_speed"),
-            pl.col("release_spin_rate")
-            .rolling_mean(window_size)
-            .alias("rolling_spin_rate"),
-            pl.col("release_extension")
-            .rolling_mean(window_size)
-            .alias("rolling_release_extension"),
-        ]
-    )
-    return df
-
-
-def handle_missing_values(df):
-    df = df.fill_null(-1)
-    df = df.fill_nan(-1)
-    return df
-
-
-def encode_categorical_features(df):
-    df = df.with_columns(
-        df.select(
-            pl.col(pl.String)
-            .exclude(["player_name"])
-            .cast(pl.Categorical)
-            .to_physical()
-        ),
-    )
-    return df
 
 
 def main():
@@ -114,39 +62,10 @@ def main():
     df = create_count_feature(df)
 
     # create base state feature
-    df = df.with_columns(df.select(["on_1b", "on_2b", "on_3b"]).fill_null(-1))
-    df = df.with_columns(
-        pl.col("on_1b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_1b"),
-        pl.col("on_2b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_2b"),
-        pl.col("on_3b")
-        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-        .alias("on_3b"),
-    )
-    df = df.with_columns(
-        (pl.col("on_1b") * 3 + pl.col("on_2b") * 5 + pl.col("on_3b") * 7).alias(
-            "base_state"
-        )
-    )
-    df = df.drop(["on_1b", "on_2b", "on_3b"])
+    df = create_base_state_feature(df)
 
     # create run_diff feature
-    df = df.with_columns(
-        (pl.col("fld_score") - pl.col("bat_score")).alias("run_diff").cast(pl.Int32),
-    )
-    df = df.drop(["fld_score", "bat_score"])
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    df = create_run_diff_feature(df)
 
     df = df.drop(
         df.select(pl.all().is_null().sum() / df.height)
@@ -157,43 +76,10 @@ def main():
         .to_list()
     )
 
-    # Add rolling features
-    # df = create_rolling_features(df)
-
     # Handle missing values
     df = handle_missing_values(df)
 
-    batting_df = pb.batting_stats_bref(params["clean"]["start_year"])
-    player_ids = list(df.select("batter").unique().to_pandas()["batter"])
-    batting_df = pl.DataFrame(batting_df[batting_df["mlbID"].isin(player_ids)])
-    batting_df = batting_df.drop(
-        [
-            "Name",
-            "Age",
-            "#days",
-            "Lev",
-            "Tm",
-            "G",
-            "PA",
-            "AB",
-            "SO",
-            "HBP",
-            "SH",
-            "SF",
-            "SB",
-            "R",
-            "RBI",
-            "IBB",
-            "2B",
-            "3B",
-            "GDP",
-            "CS",
-        ]
-    )
-    df = df.join(batting_df, left_on="batter", right_on="mlbID", how="left")
-
-    df = df.fill_null(-1)
-    df = df.fill_nan(-1)
+    df = add_batting_stats(df, params["clean"]["start_year"])
 
     # Create the output DataFrame
     output_df = df
