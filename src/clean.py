@@ -25,10 +25,8 @@ def main():
         )
         sys.exit(1)
 
-    input_file_path = params["clean"]["input_data_path"]
-
     # read in the complete data frame
-    df = pl.scan_parquet(input_file_path)
+    df = pl.scan_parquet(params["clean"]["input_data_path"])
 
     # drop columns that will never be used
     df = df.drop(
@@ -79,19 +77,21 @@ def main():
             "vz0",
             "post_home_score",
             "post_away_score",
-            # "sz_top",
-            # "sz_bot",
-            # "effective_speed",
-            # "pfx_x",
-            # "pfx_z",
+            "sz_top",
+            "sz_bot",
+            "effective_speed",
+            "pfx_x",
+            "pfx_z",
             "plate_x",
             "plate_z",
         ]
     )
 
     # filter to correct years
-    df = df.with_columns(pl.col("game_date").str.to_datetime())
-    df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
+    df = df.with_columns(pl.col("game_date").str.to_datetime())  # convert to datetime
+    df = df.filter(
+        pl.col("game_date").dt.year() >= params["clean"]["start_year"]
+    )  # filter to start year
 
     # drop rows with null values in the columns 'pitch_type' and 'pitcher', as they cant be used for training
     df = df.drop_nulls(subset=["pitch_type", "pitcher"])
@@ -102,9 +102,13 @@ def main():
         "pitcher"
     )
 
-    # Collect the 'pitcher' column into a list and filter the dataframe to only include the top k pitchers
-    top_k_pitchers_list = top_k_pitchers.collect().get_column("pitcher").to_list()
-    df = df.filter(pl.col("pitcher").is_in(top_k_pitchers_list))
+    top_k_pitchers_list = (
+        top_k_pitchers.collect().get_column("pitcher").to_list()
+    )  # Collect the 'pitcher' column into a list
+
+    df = df.filter(
+        pl.col("pitcher").is_in(top_k_pitchers_list)
+    )  # filter the dataframe to only include the top k pitchers
 
     df.sink_parquet(params["featurize"]["input_data_path"])
     end_time = time.time()
