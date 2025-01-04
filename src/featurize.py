@@ -7,12 +7,10 @@ import polars as pl
 import pybaseball as pb
 import yaml
 
-logger = logging.getLogger("featurize")
+logger = logging.getLogger("feats of epic proportions")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-handler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-)
+handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
 
 
@@ -38,7 +36,7 @@ def create_target(df):
     )
     # create target variable
     return df.with_columns(
-        df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
+        df.select(pl.col("pitch_type").shift().alias("next_pitch")),
     ).drop_nulls("next_pitch")
 
 
@@ -113,33 +111,33 @@ def main():
     df = create_target(df)
 
     # create count feature
-    # df = create_count_feature(df)
+    df = create_count_feature(df)
 
     # create base state feature
-    # df = df.with_columns(df.select(["on_1b", "on_2b", "on_3b"]).fill_null(-1))
-    # df = df.with_columns(
-    #     pl.col("on_1b")
-    #     .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-    #     .alias("on_1b"),
-    #     pl.col("on_2b")
-    #     .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-    #     .alias("on_2b"),
-    #     pl.col("on_3b")
-    #     .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
-    #     .alias("on_3b"),
-    # )
-    # df = df.with_columns(
-    #     (pl.col("on_1b") * 3 + pl.col("on_2b") * 5 + pl.col("on_3b") * 7).alias(
-    #         "base_state"
-    #     )
-    # )
-    # df = df.drop(["on_1b", "on_2b", "on_3b"])
+    df = df.with_columns(df.select(["on_1b", "on_2b", "on_3b"]).fill_null(-1))
+    df = df.with_columns(
+        pl.col("on_1b")
+        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+        .alias("on_1b"),
+        pl.col("on_2b")
+        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+        .alias("on_2b"),
+        pl.col("on_3b")
+        .map_elements(lambda s: 0 if s == -1.0 else 1, return_dtype=pl.Int32)
+        .alias("on_3b"),
+    )
+    df = df.with_columns(
+        (pl.col("on_1b") * 3 + pl.col("on_2b") * 5 + pl.col("on_3b") * 7).alias(
+            "base_state"
+        )
+    )
+    df = df.drop(["on_1b", "on_2b", "on_3b"])
 
     # create run_diff feature
-    # df = df.with_columns(
-    #     (pl.col("fld_score") - pl.col("bat_score")).alias("run_diff").cast(pl.Int32),
-    # )
-    # df = df.drop(["fld_score", "bat_score"])
+    df = df.with_columns(
+        (pl.col("fld_score") - pl.col("bat_score")).alias("run_diff").cast(pl.Int32),
+    )
+    df = df.drop(["fld_score", "bat_score"])
     df = df.sort(
         [
             "game_date",
@@ -165,23 +163,6 @@ def main():
     # Handle missing values
     df = handle_missing_values(df)
 
-    # df = df.with_columns(
-    #     [
-    #         (pl.col("release_extension").mean() - pl.col("release_extension")).alias(
-    #             "release_extension_consistency"
-    #         ),
-    #         (pl.col("release_pos_x").mean() - pl.col("release_pos_x")).alias(
-    #             "release_pos_x_consistency"
-    #         ),
-    #         (pl.col("release_pos_y").mean() - pl.col("release_pos_y")).alias(
-    #             "release_pos_y_consistency"
-    #         ),
-    #         (pl.col("release_pos_z").mean() - pl.col("release_pos_z")).alias(
-    #             "release_pos_z_consistency"
-    #         ),
-    #     ]
-    # )
-
     batting_df = pb.batting_stats_bref(params["clean"]["start_year"])
     player_ids = list(df.select("batter").unique().to_pandas()["batter"])
     batting_df = pl.DataFrame(batting_df[batting_df["mlbID"].isin(player_ids)])
@@ -200,6 +181,12 @@ def main():
             "SH",
             "SF",
             "SB",
+            "R",
+            "RBI",
+            "IBB",
+            "2B",
+            "3B",
+            "GDP",
             "CS",
         ]
     )

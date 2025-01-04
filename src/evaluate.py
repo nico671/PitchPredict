@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import tensorflow as tf
-from sklearn.preprocessing import LabelEncoder
 
 logger = logging.getLogger("evaluate")
 logger.setLevel(logging.INFO)
@@ -20,6 +19,42 @@ handler.setFormatter(
 logger.addHandler(handler)
 
 
+def explain_model(pitcher_data, output_dir):
+    feature_names = pitcher_data[list(pitcher_data.keys())[0]]["features"]
+    # Create output directory and its parents if they don't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for pitcher in pitcher_data:
+        # Get a batch of data to explain
+        X_batch = pitcher_data[pitcher]["X_test"][:10]
+
+        # Create a GradientTape to track predictions
+        with tf.GradientTape() as tape:
+            X_tensor = tf.convert_to_tensor(X_batch)
+            tape.watch(X_tensor)
+            predictions = pitcher_data[pitcher]["model"](X_tensor)
+
+        # Calculate gradients
+        gradients = tape.gradient(predictions, X_tensor)
+
+        # Average gradients across all classes
+        importance = tf.reduce_mean(tf.abs(gradients), axis=[0, 1])
+        # Plot feature importance with names
+        plt.figure(figsize=(15, 8))
+        plt.bar(range(len(importance)), importance)
+        plt.xticks(range(len(importance)), feature_names, rotation=45, ha="right")
+        plt.title(f"Feature Importance for {pitcher}")
+        plt.xlabel("Features")
+        plt.ylabel("Average Gradient Magnitude")
+        plt.tight_layout()
+
+        # Save plot
+        plt.savefig(
+            output_dir / f"{pitcher_data[pitcher]["player_name"]}_importance.png",
+            bbox_inches="tight",
+        )
+        plt.close()
+
+
 def main():
     if len(sys.argv) != 2:
         sys.stderr.write("Arguments error. Usage:\n")
@@ -28,13 +63,9 @@ def main():
     file_name = sys.argv[1]
     with open(file_name, "rb") as f:
         pitcher_data = pickle.load(f)
-    label_encoder = LabelEncoder()
-    all_labels = [pitcher_data[pitcher]["y_test"] for pitcher in pitcher_data]
-    label_encoder.fit(np.concatenate(all_labels))
     accuracy = []
     accuracy_diff = []
     for pitcher in pitcher_data:
-        print(pitcher_data[pitcher]["model"].metrics[0])
         logger.info(f'Pitcher: {pitcher_data[pitcher]["player_name"]}')
         logger.info(
             f'Test Loss: {pitcher_data[pitcher]["test_loss"]:.4f}, Test Accuracy: {pitcher_data[pitcher]["test_accuracy"]:.4f}'
@@ -43,13 +74,16 @@ def main():
             f'Total Pitches: {pitcher_data[pitcher]["total_pitches"]}, Unique Classes: {pitcher_data[pitcher]["unique_classes"]}'
         )
         logger.info(
-            f'Most common pitch rate: {pitcher_data[pitcher]["most_common_pitch_rate"]:.4f}'
+            f'Most common pitch rate: {pitcher_data[pitcher]["most_common_pitch_rate"]*100:.2f}%'
         )
         logger.info(
-            f"Average Performance Gained over just guessing the most common pitch: {pitcher_data[pitcher]['performance_gain']:.2f}"
+            f"Average Performance Gained over just guessing the most common pitch: {pitcher_data[pitcher]['performance_gain']:.2f}%"
         )
         accuracy_diff.append(pitcher_data[pitcher]["performance_gain"])
         accuracy.append(pitcher_data[pitcher]["test_accuracy"])
+
+        explain_model(pitcher_data, Path("data/outputs/feature_importance/"))
+
         plt.plot(pitcher_data[pitcher]["history"].history["loss"])
         plt.plot(pitcher_data[pitcher]["history"].history["val_loss"])
         plt.title(
@@ -75,12 +109,8 @@ def main():
         )
         plt.close()
 
-        plt.plot(
-            pitcher_data[pitcher]["history"].history["sparse_categorical_accuracy"]
-        )
-        plt.plot(
-            pitcher_data[pitcher]["history"].history["val_sparse_categorical_accuracy"]
-        )
+        plt.plot(pitcher_data[pitcher]["history"].history["accuracy"])
+        plt.plot(pitcher_data[pitcher]["history"].history["val_accuracy"])
         plt.title(
             "model train vs validation accuracy for "
             + pitcher_data[pitcher]["player_name"]
@@ -108,12 +138,19 @@ def main():
         )
         plt.close()
 
+        # Get predictions from the model
+        y_pred = pitcher_data[pitcher]["model"].predict(pitcher_data[pitcher]["X_test"])
+
+        # Convert to integer labels
+        y_pred = np.argmax(y_pred, axis=1)
+        y_true = np.argmax(pitcher_data[pitcher]["y_test"], axis=1)
+
+        # Get the actual number of unique classes from the data
+        num_classes = max(np.max(y_pred), np.max(y_true)) + 1
+
+        # Create confusion matrix with correct number of classes
         confusion_matrix = tf.math.confusion_matrix(
-            pitcher_data[pitcher]["y_test"],
-            np.argmax(
-                pitcher_data[pitcher]["model"].predict(pitcher_data[pitcher]["X_test"]),
-                axis=1,
-            ),
+            y_true, y_pred, num_classes=num_classes
         )
         plt.figure(figsize=(10, 8))
         sns.heatmap(
@@ -121,8 +158,6 @@ def main():
             annot=True,
             fmt="g",
             cmap="Blues",
-            xticklabels=label_encoder.classes_,
-            yticklabels=label_encoder.classes_,
         )
         plt.xlabel("Predicted label")
         plt.ylabel("True label")
@@ -203,9 +238,9 @@ def main():
 
     if len(accuracy_diff) > 1:
         logger.info(
-            f"Average Performance Gained over just guessing the most common pitch across all pitchers: {mean(accuracy_diff):.2f}",
+            f"Average Performance Gained over just guessing the most common pitch across all pitchers: {mean(accuracy_diff):.2f}%",
         )
-    logger.info(f"Average Test Accuracy across all pitchers: {mean(accuracy):.2f}")
+    logger.info(f"Average Test Accuracy across all pitchers: {mean(accuracy)*100:.2f}%")
 
 
 if __name__ == "__main__":

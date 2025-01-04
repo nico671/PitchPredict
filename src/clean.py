@@ -8,9 +8,7 @@ import yaml
 logger = logging.getLogger("mr. cleannnnn")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-handler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-)
+handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
 
 with open("params.yaml", "r") as file:
@@ -42,6 +40,7 @@ def main():
             "Unnamed: 0",
             "events",
             "spin_dir",
+            "delta_home_win_exp",
             "spin_rate_deprecated",
             "break_angle_deprecated",
             "break_length_deprecated",
@@ -73,14 +72,14 @@ def main():
             "if_fielding_alignment",
             "of_fielding_alignment",
             "inning_topbot",
-            "vx0",
-            "vy0",
-            "vz0",
-            "sz_top",
-            "sz_bot",
-            "effective_speed",
-            "pfx_x",
-            "pfx_z",
+            # "vx0",
+            # "vy0",
+            # "vz0",
+            # "sz_top",
+            # "sz_bot",
+            # "effective_speed",
+            # "pfx_x",
+            # "pfx_z",
             "plate_x",
             "plate_z",
         ]

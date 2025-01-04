@@ -10,7 +10,7 @@ import numpy as np
 import polars as pl
 import yaml
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical  # type: ignore
 
 from lstm_model import compile_and_fit, create_model
 
@@ -21,9 +21,7 @@ with open(params_path, "r") as file:
 logger = logging.getLogger("choo choo")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-handler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-)
+handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
 
 
@@ -131,7 +129,7 @@ def training_loop(df, params):
         "batter",
     ]:
         features.remove(feature)
-    print(features)
+    logger.info(features)
     start_time = time.time()
     for pitcher_df in df.group_by("pitcher"):
         pitcher_code = pitcher_df[0]
@@ -145,21 +143,10 @@ def training_loop(df, params):
         X_train, y_train, X_val, y_val, X_test, y_test, num_classes = (
             create_training_data(pitcher_df, features)
         )
-        print("\nData Shapes:")
-        print(f"X_train: {X_train.shape}")
-        print(f"y_train: {y_train.shape}")
-        print(f"X_val: {X_val.shape}")
-        print(f"y_val: {y_val.shape}")
 
-        print("\nLabel Distribution:")
+        logger.info("\nLabel Distribution:")
         for i in range(y_train.shape[1]):
-            print(f"Class {i}: {y_train[:,i].sum() / len(y_train):.2%}")
-
-        print("\nFeature Statistics:")
-        print(f"X_train mean: {X_train.mean():.3f}")
-        print(f"X_train std: {X_train.std():.3f}")
-        print(f"X_train min: {X_train.min():.3f}")
-        print(f"X_train max: {X_train.max():.3f}")
+            logger.info(f"Class {i}: {y_train[:,i].sum() / len(y_train):.2%}")
 
         lstm_model = create_model(X_train.shape[1:], num_classes)
         history = compile_and_fit(
@@ -175,7 +162,9 @@ def training_loop(df, params):
             pl.col("pitch_type").value_counts().sort(descending=False).head(1)
         ).item()["count"] / len(pitcher_df)
 
-        print(f"Most common pitch rate for {pitcher_name}: {most_common_pitch_rate}")
+        logger.info(
+            f"Most common pitch rate for {pitcher_name}: {most_common_pitch_rate}"
+        )
         test_loss, test_accuracy = lstm_model.evaluate(X_test, y_test)
         pitcher_data[pitcher_code] = {
             "model": lstm_model,
@@ -183,10 +172,25 @@ def training_loop(df, params):
             "test_loss": test_loss,
             "test_accuracy": test_accuracy,
             "total_pitches": len(y_test) + len(y_train) + len(y_val),
-            "unique_classes": len(np.unique(np.concatenate([y_train, y_val, y_test]))),
+            "unique_classes": len(
+                np.unique(
+                    np.concatenate(
+                        [
+                            np.argmax(y_train, axis=1),
+                            np.argmax(y_val, axis=1),
+                            np.argmax(y_test, axis=1),
+                        ]
+                    )
+                )
+            ),
             "player_name": pitcher_name,
+            "X_train": X_train,
+            "y_train": y_train,
+            "X_val": X_val,
+            "y_val": y_val,
             "X_test": X_test,
             "y_test": y_test,
+            "features": features,
             "most_common_pitch_rate": most_common_pitch_rate,
             "performance_gain": (test_accuracy - most_common_pitch_rate) * 100,
         }
@@ -201,7 +205,6 @@ def training_loop(df, params):
         logger.info(
             f"Average Performance Gained over guessing most common pitch: {mean([pitcher_data[pitcher]['performance_gain'] for pitcher in pitcher_data]):.2f}%"
         )
-
         count += 1
         logger.info(
             f'{count} of {len(df.select(pl.col("pitcher")).unique())}, {(count/len(df.select(pl.col("pitcher")).unique())) * 100:.2f}% done!'

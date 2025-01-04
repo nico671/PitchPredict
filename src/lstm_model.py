@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import tensorflow as tf
 import yaml
 
@@ -15,6 +16,25 @@ EPOCHS = params["train"]["epochs"]
 LSTM_UNITS = params["train"]["lstm_units"]
 
 
+def calculate_balanced_weights(y_train, min_weight=0.01, epsilon=1e-6):
+    # Convert one-hot to integer labels
+    y_train_int = np.argmax(y_train, axis=1)
+
+    # Get class counts with minimum 1 to avoid division by zero
+    class_counts = np.maximum(np.bincount(y_train_int), epsilon)
+
+    # Calculate inverse frequencies with numerical stability
+    weights = 1.0 / (class_counts + epsilon)
+
+    # Ensure minimum weight
+    weights = np.maximum(weights, min_weight)
+
+    # Normalize to sum to 1 using stable division
+    weights = weights / (weights.sum() + epsilon)
+
+    return dict(enumerate(weights))
+
+
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     optimizer = tf.keras.optimizers.Adam(
         learning_rate=1e-4,  # Start higher
@@ -24,28 +44,27 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     )
     model.compile(
         optimizer=optimizer,
-        loss=tf.keras.losses.CategoricalCrossentropy(),  # Use focal loss
+        loss=tf.keras.losses.CategoricalFocalCrossentropy(),  # Use focal loss
         metrics=["accuracy"],
     )
 
     callbacks = [
         # # early stopping callback to stop training when the model is not improving
-        # tf.keras.callbacks.EarlyStopping(
-        #     monitor="val_accuracy",
-        #     patience=PATIENCE,
-        #     restore_best_weights=True,
-        # ),
+        tf.keras.callbacks.EarlyStopping(
+            monitor="val_accuracy",
+            patience=PATIENCE,
+            restore_best_weights=True,
+        ),
         # # reduce learning rate on plateau callback to reduce the learning rate when the model is not improving
-        # tf.keras.callbacks.ReduceLROnPlateau(
-        #     monitor="val_accuracy",
-        #     factor=0.7,
-        #     patience=2,
-        #     min_lr=1e-6,
-        # ),
+        tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="val_accuracy",
+            factor=0.7,
+            patience=2,
+            min_lr=1e-6,
+        ),
         # metric logging callback to log metrics to dvclive
         # DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
-
     history = model.fit(
         X_train,
         y_train,
@@ -53,6 +72,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
+        class_weight=calculate_balanced_weights(y_train),
     )
 
     return history
@@ -69,17 +89,41 @@ def create_model(input_shape, num_classes):
             kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
+    if BATCH_NORMALIZATION:
+        model.add(tf.keras.layers.BatchNormalization())
     model.add(
         tf.keras.layers.LSTM(
-            LSTM_UNITS // 2,
+            LSTM_UNITS,
             return_sequences=True,
             dropout=DROPOUT,
             kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )
+    if BATCH_NORMALIZATION:
+        model.add(tf.keras.layers.BatchNormalization())
     model.add(
         tf.keras.layers.LSTM(
-            LSTM_UNITS // 4,
+            LSTM_UNITS,
+            dropout=DROPOUT,
+            return_sequences=True,
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+        )
+    )
+    if BATCH_NORMALIZATION:
+        model.add(tf.keras.layers.BatchNormalization())
+    model.add(
+        tf.keras.layers.LSTM(
+            LSTM_UNITS,
+            dropout=DROPOUT,
+            return_sequences=True,
+            kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
+        )
+    )
+    if BATCH_NORMALIZATION:
+        model.add(tf.keras.layers.BatchNormalization())
+    model.add(
+        tf.keras.layers.LSTM(
+            LSTM_UNITS,
             dropout=DROPOUT,
             kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
