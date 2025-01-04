@@ -122,6 +122,7 @@ def training_loop(df, params):
         "next_pitch",
         "pitcher",
         "player_name",
+        "pitch_type",
         "game_date",
         "game_pk",
         "at_bat_number",
@@ -165,7 +166,7 @@ def training_loop(df, params):
         logger.info(
             f"Most common pitch rate for {pitcher_name}: {most_common_pitch_rate}"
         )
-        test_loss, test_accuracy = lstm_model.evaluate(X_test, y_test)
+        test_loss, test_accuracy, _ = lstm_model.evaluate(X_test, y_test)
         pitcher_data[pitcher_code] = {
             "model": lstm_model,
             "history": history,
