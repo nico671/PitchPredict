@@ -69,21 +69,9 @@ def main():
             "pitch_name",
             "p_throws",
             "zone",
-            "if_fielding_alignment",
-            "of_fielding_alignment",
             "inning_topbot",
-            "vx0",
-            "vy0",
-            "vz0",
             "post_home_score",
             "post_away_score",
-            "sz_top",
-            "sz_bot",
-            "effective_speed",
-            "pfx_x",
-            "pfx_z",
-            "plate_x",
-            "plate_z",
         ]
     )
 
