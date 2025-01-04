@@ -14,20 +14,7 @@ BATCH_NORMALIZATION = params["train"]["batch_normalization"]
 BATCH_SIZE = params["train"]["batch_size"]
 EPOCHS = params["train"]["epochs"]
 LSTM_UNITS = params["train"]["lstm_units"]
-from tensorflow.keras import backend as K
-from tensorflow.keras.layers import Attention
-
-
-def f1_score(y_true, y_pred):
-    y_pred = K.round(y_pred)  # Round predictions to 0 or 1
-    tp = K.sum(K.cast(y_true * y_pred, "float"), axis=0)  # True Positives
-    fp = K.sum(K.cast((1 - y_true) * y_pred, "float"), axis=0)  # False Positives
-    fn = K.sum(K.cast(y_true * (1 - y_pred), "float"), axis=0)  # False Negatives
-
-    precision = tp / (tp + fp + K.epsilon())
-    recall = tp / (tp + fn + K.epsilon())
-    f1 = 2 * (precision * recall) / (precision + recall + K.epsilon())
-    return K.mean(f1)  # Return the mean F1 score across all classes
+from tensorflow.keras.layers import Attention  # type: ignore  # noqa: E402
 
 
 def calculate_balanced_weights(y_train, min_weight=0.01, epsilon=1e-6):
@@ -51,15 +38,18 @@ def calculate_balanced_weights(y_train, min_weight=0.01, epsilon=1e-6):
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     optimizer = tf.keras.optimizers.Adam(
-        learning_rate=1e-3,  # Start higher
+        learning_rate=1e-4,  # Start higher
         clipnorm=1.0,
         weight_decay=1e-5,
         # momentum=0.8,
     )
+
     model.compile(
         optimizer=optimizer,
         loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
-        metrics=["accuracy", f1_score],
+        metrics=[
+            "accuracy",
+        ],
     )
 
     callbacks = [
