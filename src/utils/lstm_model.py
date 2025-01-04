@@ -65,6 +65,10 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
             patience=PATIENCE // 2,
             min_lr=1e-6,
         ),
+<<<<<<< HEAD:src/lstm_model.py
+=======
+        # metric logging callback to log metrics to dvclive
+>>>>>>> main:src/utils/lstm_model.py
         # DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
     history = model.fit(
@@ -74,7 +78,11 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
+<<<<<<< HEAD:src/lstm_model.py
         # class_weight=calculate_balanced_weights(y_train),
+=======
+        class_weight=calculate_class_weights(y_train),
+>>>>>>> main:src/utils/lstm_model.py
     )
 
     return history

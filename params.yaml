@@ -1,19 +1,33 @@
 clean:
   input_data_path: data/raw/2015_2024_statcast.parquet
+<<<<<<< HEAD
   num_pitchers: 25
   start_year: 2015
+=======
+  num_pitchers: 5
+  start_year: 2024
+>>>>>>> main
   min_pitches: 0
 featurize:
   input_data_path: data/cleaned/2015_2024_statcast_clean.parquet
 train:
   input_data_path: data/training/2015_2024_statcast_train.parquet
   features_path: data/full_features.txt
+<<<<<<< HEAD
   dropout: 0.3
   patience: 10
   kernel_regularizer: 0.01
   batch_normalization: True
   batch_size: 64
   time_steps: 10
+=======
+  dropout: 0.05 # keep this at 0.1
+  patience: 10
+  kernel_regularizer: 0.01 # keep this at 0.01
+  batch_normalization: true
+  batch_size: 32
+  time_steps: 30
+>>>>>>> main
   train_split: .8
   epochs: 200
   lstm_units: 128

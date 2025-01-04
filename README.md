@@ -1,17 +1,16 @@
 # PitchPredict
 
-This project is a ML pipeline that predicts the next pitch type that a pitcher will throw based on a sequence of previous pitches. The pipeline is built using the following steps:
+Table of Contents:
 
-README TOC:
-
-- [Code Overview](#code-overview)
-  1. [Data Collection](#data-collection)
-  2. [Data Cleaning](#data-cleaning)
-  3. [Feature Engineering](#feature-engineering)
-  4. [Model Training](#model-training)
-  5. [Model Evaluation](#model-evaluation)
-- [Experiment Results](#experiment-results)
-- [Next Steps](#next-steps)
+- [PitchPredict](#pitchpredict)
+  - [Code Overview](#code-overview)
+    - [Data Collection](#data-collection)
+    - [Data Cleaning](#data-cleaning)
+  - [Feature Engineering](#feature-engineering)
+    - [Model Training](#model-training)
+    - [Model Evaluation](#model-evaluation)
+  - [Experiment Results](#experiment-results)
+  - [Next Steps](#next-steps)
 
 ## Code Overview
 
@@ -23,9 +22,9 @@ Documentation for the pybaseball library can be found [here](https://github.com/
 
 ### Data Cleaning
 
-There is a very minimal amount of data cleaning applied to the data. In the future, the featurization and cleaning stages may be combined, but for now they are seperate. The clean stage primarily restricts the data to only include the pitchers and years of data which the model should be trained on. The cleaning stage also drops any duplicate rows in the data.
+Cleaning for this dataset is minimal, as the Statcast data is generally very clean already. The main cleaning that is done is dropping unneeded columns that are either deprecated, repeated or useless as features to the model as well as any unusable rows (no pitch type given or no pitcher given). Additionally, the dataset is further restricted to the years specificed in the params.yaml file as well as the desired amount of pitchers (i.e. the n pitchers who threw the most pitches in the given timeframe).
 
-The source for the stage can be found at `src/clean.py`.
+The source code for the stage can be found at [`src/clean.py`](src/clean.py).
 
 ## Feature Engineering
 

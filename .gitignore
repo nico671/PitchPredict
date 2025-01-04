@@ -16,4 +16,4 @@ notebooks/old/
 .dvc/
 .venv/
 uv.lock
-dvclive/
+dvclive/ 

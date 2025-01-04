@@ -12,7 +12,8 @@ import yaml
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.utils import to_categorical  # type: ignore
 
-from lstm_model import compile_and_fit, create_model
+from utils.lstm_model import compile_and_fit, create_model
+from utils.utils import sort_by_date
 
 params_path = Path("params.yaml")
 with open(params_path, "r") as file:
@@ -36,15 +37,7 @@ def create_sequences(X, y, time_steps):
 
 def create_training_data(pitcher_df, features):
     # sort the data by game_date, game_pk, at_bat_number, pitch_number
-    pitcher_df = pitcher_df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    pitcher_df = sort_by_date(pitcher_df)
 
     # select features and target variable for initial split of X and y
     X = pitcher_df.select(pl.col(features)).to_numpy()
@@ -208,7 +201,7 @@ def training_loop(df, params):
         )
         count += 1
         logger.info(
-            f'{count} of {len(df.select(pl.col("pitcher")).unique())}, {(count/len(df.select(pl.col("pitcher")).unique())) * 100:.2f}% done!'
+            f'{count} of {len(df.select(pl.col("pitcher")).unique())}, {(count/len(df.select(pl.col("pitcher")).unique())) * 100:.2f}% done!\n'
         )
     end_time = time.time()
     logger.info(f"Training took {end_time - start_time} seconds")
@@ -222,6 +215,7 @@ def main():
         sys.exit(1)
 
     df = pl.read_parquet(Path(params["train"]["input_data_path"]))
+
     pitcher_data = training_loop(df, params)
 
     output_dir = Path("data/evaluate/")

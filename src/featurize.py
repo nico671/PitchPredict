@@ -109,6 +109,7 @@ def main():
 
     # create target variable
     df = create_target(df)
+    df = df.drop_nulls("next_pitch")
 
     # create count feature
     df = create_count_feature(df)
@@ -193,19 +194,8 @@ def main():
     df = df.join(batting_df, left_on="batter", right_on="mlbID", how="left")
 
     df = df.fill_null(-1)
-    df = df.fill_nan(-1)
-
     # Create the output DataFrame
-    output_df = df
-    output_df = output_df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    output_df = sort_by_date(df)
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -213,7 +203,6 @@ def main():
     output_df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
     end_time = time.time()
     logger.info(f"Time taken: {end_time - start_time:.2f} seconds")
-    logger.info("done")
 
 
 if __name__ == "__main__":

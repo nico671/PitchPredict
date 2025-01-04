@@ -1,4 +1,5 @@
 stages:
+<<<<<<< HEAD
     clean:
         cmd: python3 src/clean.py
         deps:
@@ -193,3 +194,77 @@ metrics:
     - dvclive/Cole, Gerrit_logs/metrics.json
     - dvclive/Nola, Aaron_logs/metrics.json
     - dvclive/Wheeler, Zack_logs/metrics.json
+=======
+  clean:
+    cmd: python3 src/clean.py
+    deps:
+    - data/raw/2015_2024_statcast.parquet
+    - src/clean.py
+    - params.yaml
+    outs:
+    - data/cleaned/2015_2024_statcast_clean.parquet
+  featurize:
+    cmd: python3 src/featurize.py
+    deps:
+    - data/cleaned/2015_2024_statcast_clean.parquet
+    - src/featurize.py
+    outs:
+    - data/training/2015_2024_statcast_train.parquet
+  train:
+    cmd: python3 src/train.py
+    deps:
+    - data/training/2015_2024_statcast_train.parquet
+    - src/utils/lstm_model.py
+    - src/train.py
+    outs:
+    - data/evaluate/pitcher_data.pickle
+  evaluate:
+    cmd: python3 src/evaluate.py data/evaluate/pitcher_data.pickle
+    deps:
+    - data/evaluate/pitcher_data.pickle
+    - src/evaluate.py
+    outs:
+    - data/outputs/
+plots:
+- data/outputs/performance_gain
+- data/outputs/accuracy_plots
+- data/outputs/loss_plots
+- data/outputs/confusion_matrix
+- dvclive/Fedde, Erick_logs/plots/metrics:
+    x: step
+- dvclive/Gausman, Kevin_logs/plots/metrics:
+    x: step
+- dvclive/Burnes, Corbin_logs/plots/metrics:
+    x: step
+- dvclive/López, Pablo_logs/plots/metrics:
+    x: step
+- dvclive/Bassitt, Chris_logs/plots/metrics:
+    x: step
+- dvclive/Webb, Logan_logs/plots/metrics:
+    x: step
+- dvclive/Wheeler, Zack_logs/plots/metrics:
+    x: step
+- dvclive/Gallen, Zac_logs/plots/metrics:
+    x: step
+- dvclive/Nola, Aaron_logs/plots/metrics:
+    x: step
+- dvclive/Cease, Dylan_logs/plots/metrics:
+    x: step
+- dvclive/Peralta, Freddy_logs/plots/metrics:
+    x: step
+- dvclive/Ragans, Cole_logs/plots/metrics:
+    x: step
+metrics:
+- dvclive/Fedde, Erick_logs/metrics.json
+- dvclive/Gausman, Kevin_logs/metrics.json
+- dvclive/Burnes, Corbin_logs/metrics.json
+- dvclive/López, Pablo_logs/metrics.json
+- dvclive/Bassitt, Chris_logs/metrics.json
+- dvclive/Webb, Logan_logs/metrics.json
+- dvclive/Wheeler, Zack_logs/metrics.json
+- dvclive/Gallen, Zac_logs/metrics.json
+- dvclive/Nola, Aaron_logs/metrics.json
+- dvclive/Cease, Dylan_logs/metrics.json
+- dvclive/Peralta, Freddy_logs/metrics.json
+- dvclive/Ragans, Cole_logs/metrics.json
+>>>>>>> main

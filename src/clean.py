@@ -26,7 +26,11 @@ def main():
         sys.exit(1)
 
     # read in the complete data frame
+<<<<<<< HEAD
     df = pl.scan_parquet(params["clean"]["input_data_path"])
+=======
+    df = pl.scan_parquet(input_file_path)
+>>>>>>> main
 
     # drop columns that will never be used
     df = df.drop(
@@ -76,6 +80,7 @@ def main():
     )
 
     # filter to correct years
+<<<<<<< HEAD
     df = df.with_columns(pl.col("game_date").str.to_datetime())  # convert to datetime
     df = df.filter(
         pl.col("game_date").dt.year() >= params["clean"]["start_year"]
@@ -83,6 +88,10 @@ def main():
 
     # drop rows with null values in the columns 'pitch_type' and 'pitcher', as they cant be used for training
     df = df.drop_nulls(subset=["pitch_type", "pitcher"])
+=======
+    df = df.with_columns(pl.col("game_date").str.to_datetime())
+    df = df.filter(pl.col("game_date").dt.year() >= params["clean"]["start_year"])
+>>>>>>> main
 
     # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
     pitcher_counts = df.group_by("pitcher").len().sort("len", descending=True)
@@ -97,6 +106,10 @@ def main():
     df = df.filter(
         pl.col("pitcher").is_in(top_k_pitchers_list)
     )  # filter the dataframe to only include the top k pitchers
+
+    # drop rows with null values in the columns 'release_speed' and 'release_pos_x', as they cant be used for training
+    df = df.fill_nan(-1)
+    df = df.fill_null(-1)
 
     df.sink_parquet(params["featurize"]["input_data_path"])
     end_time = time.time()
