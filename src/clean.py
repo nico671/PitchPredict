@@ -18,17 +18,13 @@ with open("params.yaml", "r") as file:
 def main():
     start_time = time.time()
     # check for correct input length
-    if len(sys.argv) != 1:
+    if len(sys.argv) != 1 or ".py" not in sys.argv[0]:
         logger.error("Arguments error. Usage:\n")
-        logger.error("not enough inputs, expected input structure is: *.py")
-        sys.exit(1)
-
-    # check for correct input file types
-    elif ".py" not in sys.argv[0]:
         logger.error(
-            "Please enter a valid python source file as the first input for this stage"
+            "not enough inputs or incorrect inputs, expected input structure is: *.py"
         )
         sys.exit(1)
+
     input_file_path = params["clean"]["input_data_path"]
 
     # read in the complete data frame
@@ -47,6 +43,12 @@ def main():
             "game_type",
             "home_team",
             "away_team",
+            "stand",
+            "pfx_x",
+            "pfx_z",
+            "release_pos_y",
+            "release_pos_z",
+            "release_pos_x",
             "des",
             "description",
             "game_year",
@@ -72,9 +74,11 @@ def main():
             "if_fielding_alignment",
             "of_fielding_alignment",
             "inning_topbot",
-            # "vx0",
-            # "vy0",
-            # "vz0",
+            "vx0",
+            "vy0",
+            "vz0",
+            "post_home_score",
+            "post_away_score",
             # "sz_top",
             # "sz_bot",
             # "effective_speed",

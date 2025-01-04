@@ -209,7 +209,6 @@ def main():
     # Ensure output directory exists
     output_dir = Path("data/training")
     output_dir.mkdir(parents=True, exist_ok=True)
-    logger.info(output_dir / "2015_2024_statcast_train.parquet")
     # Write to Parquet file
     output_df.write_parquet(output_dir / "2015_2024_statcast_train.parquet")
     end_time = time.time()

@@ -37,14 +37,14 @@ def calculate_balanced_weights(y_train, min_weight=0.01, epsilon=1e-6):
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     optimizer = tf.keras.optimizers.Adam(
-        learning_rate=1e-4,  # Start higher
+        learning_rate=1e-3,  # Start higher
         clipnorm=1.0,
         weight_decay=1e-5,
         # momentum=0.8,
     )
     model.compile(
         optimizer=optimizer,
-        loss=tf.keras.losses.CategoricalFocalCrossentropy(),  # Use focal loss
+        loss=tf.keras.losses.CategoricalCrossentropy(),  # Use focal loss
         metrics=["accuracy"],
     )
 
@@ -55,14 +55,12 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
             patience=PATIENCE,
             restore_best_weights=True,
         ),
-        # # reduce learning rate on plateau callback to reduce the learning rate when the model is not improving
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_accuracy",
-            factor=0.7,
-            patience=2,
+            factor=0.5,
+            patience=PATIENCE // 2,
             min_lr=1e-6,
         ),
-        # metric logging callback to log metrics to dvclive
         # DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
     history = model.fit(
@@ -72,7 +70,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
-        class_weight=calculate_balanced_weights(y_train),
+        # class_weight=calculate_balanced_weights(y_train),
     )
 
     return history

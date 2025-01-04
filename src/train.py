@@ -124,9 +124,9 @@ def training_loop(df, params):
         "player_name",
         "game_date",
         "game_pk",
-        "pitch_type",
+        "at_bat_number",
         "type",
-        "batter",
+        "pitch_number",
     ]:
         features.remove(feature)
     logger.info(features)
@@ -144,9 +144,9 @@ def training_loop(df, params):
             create_training_data(pitcher_df, features)
         )
 
-        logger.info("\nLabel Distribution:")
-        for i in range(y_train.shape[1]):
-            logger.info(f"Class {i}: {y_train[:,i].sum() / len(y_train):.2%}")
+        # logger.info("\nLabel Distribution:")
+        # for i in range(y_train.shape[1]):
+        #     logger.info(f"Class {i}: {y_train[:,i].sum() / len(y_train):.2%}")
 
         lstm_model = create_model(X_train.shape[1:], num_classes)
         history = compile_and_fit(
