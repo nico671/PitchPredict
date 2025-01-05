@@ -17,7 +17,7 @@ stages:
         cmd: python3 src/train.py
         deps:
             - data/training/2015_2024_statcast_train.parquet
-            - src/lstm_model.py
+            - src/utils/lstm_model.py
             - src/train.py
         outs:
             - data/evaluate/pitcher_data.pickle
@@ -139,6 +139,8 @@ plots:
           x: step
     - dvclive/Wheeler, Zack_logs/plots/metrics:
           x: step
+    - dvclive/Wacha, Michael_logs/plots/metrics:
+          x: step
 metrics:
     - dvclive/Gallen, Zac_logs/metrics.json
     - dvclive/Ragans, Cole_logs/metrics.json
@@ -193,3 +195,4 @@ metrics:
     - dvclive/Cole, Gerrit_logs/metrics.json
     - dvclive/Nola, Aaron_logs/metrics.json
     - dvclive/Wheeler, Zack_logs/metrics.json
+    - dvclive/Wacha, Michael_logs/metrics.json

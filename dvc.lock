@@ -56,8 +56,8 @@ stages:
       size: 52972225
     - path: src/featurize.py
       hash: md5
-      md5: 20f401ae3c6764caefb70e9f8ce6388e
-      size: 5645
+      md5: 634329dad5dfefbeae3d38ad07d2fb7a
+      size: 2660
     outs:
     - path: data/training/2015_2024_statcast_train.parquet
       hash: md5

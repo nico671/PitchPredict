@@ -10,8 +10,8 @@ import numpy as np
 import polars as pl
 import yaml
 
-from src.utils.lstm_model import compile_and_fit, create_model
-from src.utils.train_utils import create_training_data
+from utils.lstm_model import compile_and_fit, create_model
+from utils.train_utils import create_training_data
 
 params_path = Path("params.yaml")
 with open(params_path, "r") as file:

@@ -6,7 +6,7 @@ from pathlib import Path
 import polars as pl
 import yaml
 
-from src.utils.featurize_utils import (
+from utils.featurize_utils import (
     add_batting_stats,
     create_base_state_feature,
     create_count_feature,
@@ -76,11 +76,9 @@ def main():
         .to_list()
     )
 
+    df = add_batting_stats(df, params["clean"]["start_year"])
     # Handle missing values
     df = handle_missing_values(df)
-
-    df = add_batting_stats(df, params["clean"]["start_year"])
-
     # Create the output DataFrame
     output_df = df
     output_df = output_df.sort(

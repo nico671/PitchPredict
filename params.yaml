@@ -7,7 +7,6 @@ featurize:
   input_data_path: data/cleaned/2015_2024_statcast_clean.parquet
 train:
   input_data_path: data/training/2015_2024_statcast_train.parquet
-  features_path: data/full_features.txt
   dropout: 0.3
   patience: 10
   kernel_regularizer: 0.01
