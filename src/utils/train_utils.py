@@ -4,7 +4,6 @@ import numpy as np
 import polars as pl
 import yaml
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.utils import to_categorical  # type: ignore
 
 params_path = Path("params.yaml")
 with open(params_path, "r") as file:
@@ -44,7 +43,6 @@ def create_training_data(pitcher_df, features):
     X_seq = X_seq.astype("float32")
     y_seq = y_seq.astype("int32")  # Ensure labels are integers
     num_classes = np.max(y_seq) + 1
-    y_seq = to_categorical(y_seq, num_classes=num_classes)
     # split into train, test, val
     train_split = params["train"]["train_split"]
     train_size = int(len(X_seq) * train_split)
@@ -62,10 +60,10 @@ def create_training_data(pitcher_df, features):
         X_test.shape
     )
 
-    # logger.info(f"Unique classes: {len(np.unique(y))}")
-    # logger.info(f"Classes missing from test: {len(np.setdiff1d(y, y_test))}")
-    # logger.info(f"Classes missing from train: {len(np.setdiff1d(y, y_train))}")
-    # logger.info(f"Classes missing from val: {len(np.setdiff1d(y, y_val))}")
+    print(f"Unique classes: {num_classes}")
+    print(f"Classes missing from test: {len(np.setdiff1d(y, y_test))}")
+    print(f"Classes missing from train: {len(np.setdiff1d(y, y_train))}")
+    print(f"Classes missing from val: {len(np.setdiff1d(y, y_val))}")
 
     return (
         X_train_scaled,

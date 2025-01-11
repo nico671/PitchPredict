@@ -100,7 +100,7 @@ def create_target(df):
     # create target variable, shifting one row down to make it the next pitch since our data is sorted to descend as time passes
     # in the future i want to create cutoffs, like at the end of an at bat, inning, etc. but for now this is fine
     return df.with_columns(
-        df.select(pl.col("pitch_type").shift().alias("next_pitch")),
+        df.select(pl.col("pitch_type").shift(-1).alias("next_pitch")),
     ).drop_nulls("next_pitch")
 
 

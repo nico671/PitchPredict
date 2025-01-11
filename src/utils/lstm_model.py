@@ -1,11 +1,29 @@
 from pathlib import Path
 
+import numpy as np
 import tensorflow as tf
 import yaml
-from tensorflow.keras.layers import Attention  # type: ignore  # noqa: E402
+from sklearn.utils.class_weight import compute_class_weight
+from tensorflow.keras.layers import (  # type: ignore
+    LSTM,
+    Attention,
+    BatchNormalization,
+    Dense,
+    Dropout,
+    Input,
+)
 
 from dvclive import Live  # type: ignore  # noqa: E402
 from dvclive.keras import DVCLiveCallback  # type: ignore  # noqa: E402
+
+
+def calculate_class_weight(y_train):
+    classes = np.unique(y_train)
+    class_weights = compute_class_weight(
+        class_weight="balanced", classes=classes, y=y_train
+    )
+    return dict(enumerate(class_weights))
+
 
 # load hyperparameters from params.yaml, not sure if this is the best way to do this but it works
 params = Path("params.yaml")
@@ -18,35 +36,28 @@ LSTM_UNITS = params["train"]["lstm_units"]
 
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
-    # although i found some resources saying that SGD is best for pure model performance, Adam gives excellent results and requires far less tuning
-    optimizer = tf.keras.optimizers.Adam(
-        learning_rate=1e-4,  # hyperparameter controlling how much we are adjusting the weights of our network with respect the loss gradient
-        clipnorm=1.0,  # hyperparameter that controls the maximum norm of the gradients
-        weight_decay=1e-5,  # hyperparameter that adds a penalty to the loss function to prevent overfitting
-    )
+    optimizer = tf.keras.optimizers.Adam()
 
     model.compile(
         optimizer=optimizer,
-        loss=tf.keras.losses.CategoricalCrossentropy(
-            label_smoothing=0.1  # hyperparameter that smooths the labels (this really helped with overfitting and generalization)
-        ),  # categorical crossentropy is standard for classification tasks with multiple classes and one hot encoded labels
+        loss="sparse_categorical_crossentropy",  # categorical crossentropy is standard for classification tasks with multiple classes and one hot encoded labels
         metrics=[
-            "accuracy",
+            "sparse_categorical_accuracy",
         ],
     )
 
-    callbacks = [
+    callbacks = [  # noqa: F841
         # callback to end training early if the model stops improving
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_accuracy",
+            monitor="val_sparse_categorical_accuracy",
             patience=PATIENCE,
             restore_best_weights=True,
         ),
         # callback to reduce the learning rate if the model stops improving, helps squeeze a bit more performance out of the model
         tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_accuracy",
+            monitor="val_sparse_categorical_accuracy",
             factor=0.5,
-            patience=PATIENCE // 2,
+            patience=PATIENCE // 4,
             min_lr=1e-6,
         ),
         # callback to log metrics to DVC Live (the ML experiment tracking tool I used)
@@ -58,23 +69,43 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         validation_data=(X_val, y_val),  # validation data to monitor model performance
         epochs=EPOCHS,  # given in params.yaml, hyperparameter that controls how many times the model will see the data
         batch_size=BATCH_SIZE,  # given in params.yaml, hyperparameter that controls how many samples are processed before the model weights are updated
-        callbacks=callbacks,  # list of callbacks to use during training
+        # callbacks=callbacks,  # list of callbacks to use during training
+        # class_weight=calculate_class_weight(y_train),
     )
 
     return history
 
 
-# LSTM model with attention layer
-def create_model(input_shape, num_classes):
+def create_model(
+    input_shape,
+    num_classes,
+    lstm_units=LSTM_UNITS,
+    dropout_rate=params["train"]["dropout"],
+    kernel_regularizer=params["train"]["kernel_regularizer"],
+):
     # input layer
-    input_seq = tf.keras.layers.Input(shape=input_shape)
-    # first LSTM layer
-    x = tf.keras.layers.LSTM(LSTM_UNITS, return_sequences=True)(input_seq)
-    # attention layer, this is the key to the model's performance as it allows the model to focus on the most important parts of the input sequence
+    input_seq = Input(shape=input_shape)
+
+    # first LSTM layer with dropout and batch normalization
+    x = LSTM(
+        lstm_units,
+        return_sequences=True,
+        kernel_regularizer=tf.keras.regularizers.l2(kernel_regularizer),
+    )(input_seq)
+    x = Dropout(dropout_rate)(x)
+    x = BatchNormalization()(x)
+
+    # attention layer
     attention = Attention()([x, x])
-    # second LSTM layer
-    x = tf.keras.layers.LSTM(LSTM_UNITS)(attention)
+
+    # second LSTM layer with dropout and batch normalization
+    x = LSTM(
+        lstm_units, kernel_regularizer=tf.keras.regularizers.l2(kernel_regularizer)
+    )(attention)
+    x = Dropout(dropout_rate)(x)
+    x = BatchNormalization()(x)
+
     # dense layer with softmax activation for multi-class classification
-    output = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
+    output = Dense(num_classes, activation="softmax")(x)
 
     return tf.keras.models.Model(inputs=input_seq, outputs=output)

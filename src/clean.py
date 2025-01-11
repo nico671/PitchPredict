@@ -1,5 +1,4 @@
 import logging
-import sys
 import time
 
 import polars as pl
@@ -18,12 +17,12 @@ with open("params.yaml", "r") as file:
 def main():
     start_time = time.time()
     # check for correct input length
-    if len(sys.argv) != 1 or ".py" not in sys.argv[0]:
-        logger.error("Arguments error. Usage:\n")
-        logger.error(
-            "not enough inputs or incorrect inputs, expected input structure is: *.py"
-        )
-        sys.exit(1)
+    # if len(sys.argv) != 1 or ".py" not in sys.argv[0]:
+    #     logger.error("Arguments error. Usage:\n")
+    #     logger.error(
+    #         "not enough inputs or incorrect inputs, expected input structure is: *.py"
+    #     )
+    #     sys.exit(1)
 
     # read in the complete data frame
     df = pl.scan_parquet(params["clean"]["input_data_path"])
@@ -32,23 +31,23 @@ def main():
     df = df.drop(
         [
             "Unnamed: 0",
-            "events",
-            "spin_dir",
-            "delta_home_win_exp",
+            # "events",
+            # "spin_dir",
+            # "delta_home_win_exp",
             "spin_rate_deprecated",
             "break_angle_deprecated",
             "break_length_deprecated",
             "game_type",
             "home_team",
             "away_team",
-            "stand",
-            "pfx_x",
-            "pfx_z",
-            "release_pos_y",
-            "release_pos_z",
-            "release_pos_x",
-            "des",
-            "description",
+            # "stand",
+            # "pfx_x",
+            # "pfx_z",
+            # "release_pos_y",
+            # "release_pos_z",
+            # "release_pos_x",
+            # "des",
+            # "description",
             "game_year",
             "tfs_deprecated",
             "tfs_zulu_deprecated",
@@ -68,15 +67,16 @@ def main():
             "fielder_9",
             "pitch_name",
             "p_throws",
-            "zone",
+            # "zone",
             "inning_topbot",
             "post_home_score",
             "post_away_score",
+            # "sz_top",
+            # "sz_bot",
         ]
     )
-
-    # filter to correct years
     df = df.with_columns(pl.col("game_date").str.to_datetime())  # convert to datetime
+    # filter to correct years
     df = df.filter(
         pl.col("game_date").dt.year() >= params["clean"]["start_year"]
     )  # filter to start year

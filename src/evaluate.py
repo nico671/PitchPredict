@@ -143,7 +143,7 @@ def main():
 
         # Convert to integer labels
         y_pred = np.argmax(y_pred, axis=1)
-        y_true = np.argmax(pitcher_data[pitcher]["y_test"], axis=1)
+        y_true = pitcher_data[pitcher]["y_test"]
 
         # Get the actual number of unique classes from the data
         num_classes = max(np.max(y_pred), np.max(y_true)) + 1

@@ -6,7 +6,6 @@ import time
 from pathlib import Path
 from statistics import mean
 
-import numpy as np
 import polars as pl
 import yaml
 
@@ -82,7 +81,7 @@ def training_loop(df, params):
         )
 
         # logger.info("\nLabel Distribution:")
-        # for i in range(y_train.shape[1]):
+        # for i in range(y_train):
         #     logger.info(f"Class {i}: {y_train[:,i].sum() / len(y_train):.2%}")
 
         # create and train the model using utility functions
@@ -115,17 +114,7 @@ def training_loop(df, params):
             "test_loss": test_loss,
             "test_accuracy": test_accuracy,
             "total_pitches": num_pitches,
-            "unique_classes": len(
-                np.unique(
-                    np.concatenate(
-                        [
-                            np.argmax(y_train, axis=1),
-                            np.argmax(y_val, axis=1),
-                            np.argmax(y_test, axis=1),
-                        ]
-                    )
-                )
-            ),
+            "unique_classes": num_classes,
             "player_name": pitcher_name,
             "X_train": X_train,
             "y_train": y_train,
