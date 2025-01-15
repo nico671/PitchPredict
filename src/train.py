@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from statistics import mean
 
+import numpy as np
 import polars as pl
 import yaml
 
@@ -45,21 +46,17 @@ def training_loop(df, params):
         "pitch_number",
     ]:
         features.remove(feature)
-    logger.info(f"Features: {features}")
+    logger.info(f"{len(features)} features: {features}")
 
     # loop through each pitcher and train a model, uses the polars groupby function to group by pitcher and then iterate through each pitcher
     for pitcher_df in df.group_by("pitcher"):
         # get the pitcher code (statcast id)
-        pitcher_code = pitcher_df[0]
-
-        # get the pitcher dataframe
-        pitcher_df = pitcher_df[1]
+        pitcher_code, pitcher_df = pitcher_df
 
         # sort the dataframe by game date, game pk, inning, at bat number, and pitch number, ensuring the data is in time series order
         pitcher_df = pitcher_df.sort(
             [
                 "game_date",
-                "game_pk",
                 "inning",
                 "at_bat_number",
                 "pitch_number",
@@ -81,7 +78,7 @@ def training_loop(df, params):
         )
 
         # logger.info("\nLabel Distribution:")
-        # for i in range(y_train):
+        # for i in range(y_train.shape[1]):
         #     logger.info(f"Class {i}: {y_train[:,i].sum() / len(y_train):.2%}")
 
         # create and train the model using utility functions
@@ -105,7 +102,7 @@ def training_loop(df, params):
         )
 
         # evaluate the model on the test set
-        test_loss, test_accuracy = lstm_model.evaluate(X_test, y_test)
+        test_loss, test_accuracy, *_ = lstm_model.evaluate(X_test, y_test)
 
         # store the model and metrics in the pitcher_data dictionary
         pitcher_data[pitcher_code] = {
@@ -114,7 +111,17 @@ def training_loop(df, params):
             "test_loss": test_loss,
             "test_accuracy": test_accuracy,
             "total_pitches": num_pitches,
-            "unique_classes": num_classes,
+            "unique_classes": len(
+                np.unique(
+                    np.concatenate(
+                        [
+                            y_train,
+                            y_val,
+                            y_test,
+                        ]
+                    )
+                )
+            ),
             "player_name": pitcher_name,
             "X_train": X_train,
             "y_train": y_train,
@@ -133,7 +140,7 @@ def training_loop(df, params):
             f" Accuracy Gained over guessing most common pitch for {pitcher_name}: {pitcher_data[pitcher_code]['performance_gain']:.2f}%",
         )
         logger.info(
-            f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data])*100:.2f}%"
+            f"Average Test Accuracy: {mean([pitcher_data[pitcher]['test_accuracy'] for pitcher in pitcher_data]) * 100:.2f}%"
         )
 
         logger.info(
@@ -141,7 +148,7 @@ def training_loop(df, params):
         )
         count += 1
         logger.info(
-            f'{count} of {len(df.select(pl.col("pitcher")).unique())}, {(count/len(df.select(pl.col("pitcher")).unique())) * 100:.2f}% done!'
+            f"{count} of {len(df.select(pl.col('pitcher')).unique())}, {(count / len(df.select(pl.col('pitcher')).unique())) * 100:.2f}% done!"
         )
 
     return pitcher_data

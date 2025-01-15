@@ -49,7 +49,7 @@ def explain_model(pitcher_data, output_dir):
 
         # Save plot
         plt.savefig(
-            output_dir / f"{pitcher_data[pitcher]["player_name"]}_importance.png",
+            output_dir / f"{pitcher_data[pitcher]['player_name']}_importance.png",
             bbox_inches="tight",
         )
         plt.close()
@@ -66,15 +66,15 @@ def main():
     accuracy = []
     accuracy_diff = []
     for pitcher in pitcher_data:
-        logger.info(f'Pitcher: {pitcher_data[pitcher]["player_name"]}')
+        logger.info(f"Pitcher: {pitcher_data[pitcher]['player_name']}")
         logger.info(
-            f'Test Loss: {pitcher_data[pitcher]["test_loss"]:.4f}, Test Accuracy: {pitcher_data[pitcher]["test_accuracy"]:.4f}'
+            f"Test Loss: {pitcher_data[pitcher]['test_loss']:.4f}, Test Accuracy: {pitcher_data[pitcher]['test_accuracy']:.4f}"
         )
         logger.info(
-            f'Total Pitches: {pitcher_data[pitcher]["total_pitches"]}, Unique Classes: {pitcher_data[pitcher]["unique_classes"]}'
+            f"Total Pitches: {pitcher_data[pitcher]['total_pitches']}, Unique Classes: {pitcher_data[pitcher]['unique_classes']}"
         )
         logger.info(
-            f'Most common pitch rate: {pitcher_data[pitcher]["most_common_pitch_rate"]*100:.2f}%'
+            f"Most common pitch rate: {pitcher_data[pitcher]['most_common_pitch_rate'] * 100:.2f}%"
         )
         logger.info(
             f"Average Performance Gained over just guessing the most common pitch: {pitcher_data[pitcher]['performance_gain']:.2f}%"
@@ -109,8 +109,12 @@ def main():
         )
         plt.close()
 
-        plt.plot(pitcher_data[pitcher]["history"].history["accuracy"])
-        plt.plot(pitcher_data[pitcher]["history"].history["val_accuracy"])
+        plt.plot(
+            pitcher_data[pitcher]["history"].history["sparse_categorical_accuracy"]
+        )
+        plt.plot(
+            pitcher_data[pitcher]["history"].history["val_sparse_categorical_accuracy"]
+        )
         plt.title(
             "model train vs validation accuracy for "
             + pitcher_data[pitcher]["player_name"]
@@ -161,7 +165,7 @@ def main():
         )
         plt.xlabel("Predicted label")
         plt.ylabel("True label")
-        plt.title(f'Confusion Matrix for {pitcher_data[pitcher]["player_name"]}')
+        plt.title(f"Confusion Matrix for {pitcher_data[pitcher]['player_name']}")
         output_dir = Path("data/outputs/confusion_mat/")
         if os.path.isfile(
             os.path.join(
@@ -240,7 +244,9 @@ def main():
         logger.info(
             f"Average Performance Gained over just guessing the most common pitch across all pitchers: {mean(accuracy_diff):.2f}%",
         )
-    logger.info(f"Average Test Accuracy across all pitchers: {mean(accuracy)*100:.2f}%")
+    logger.info(
+        f"Average Test Accuracy across all pitchers: {mean(accuracy) * 100:.2f}%"
+    )
 
 
 if __name__ == "__main__":
