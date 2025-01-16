@@ -5,6 +5,8 @@ import polars as pl
 import yaml
 from sklearn.preprocessing import MinMaxScaler
 
+from src.utils.featurize_utils import sort_by_time
+
 params_path = Path("params.yaml")
 with open(params_path, "r") as file:
     params = yaml.safe_load(file)
@@ -20,16 +22,7 @@ def create_sequences(X, y, time_steps):
 
 
 def create_training_data(pitcher_df, features):
-    # sort the data by game_date, game_pk, at_bat_number, pitch_number
-    pitcher_df = pitcher_df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    pitcher_df = sort_by_time(pitcher_df)
 
     # select features and target variable for initial split of X and y
     X = pitcher_df.select(pl.col(features)).to_numpy()
@@ -59,11 +52,6 @@ def create_training_data(pitcher_df, features):
     X_test_scaled = scaler.transform(X_test.reshape(-1, n_features)).reshape(
         X_test.shape
     )
-
-    print(f"Unique classes: {num_classes}")
-    print(f"Classes missing from test: {len(np.setdiff1d(y, y_test))}")
-    print(f"Classes missing from train: {len(np.setdiff1d(y, y_train))}")
-    print(f"Classes missing from val: {len(np.setdiff1d(y, y_val))}")
 
     return (
         X_train_scaled,

@@ -6,7 +6,18 @@ from pathlib import Path
 import polars as pl
 import yaml
 
-from utils.featurize_utils import *  # noqa: F403
+from utils.featurize_utils import (
+    add_batting_stats,
+    create_base_state_feature,
+    create_consistency_feature,
+    create_count_feature,
+    create_lookback_features,
+    create_run_diff_feature,
+    create_target,
+    encode_categorical_features,
+    handle_missing_values,
+    sort_by_time,
+)
 
 logger = logging.getLogger("feats of epic proportions")
 logger.setLevel(logging.INFO)
@@ -54,16 +65,7 @@ def main():
 
         logger.info(f"Pitcher: {pitcher_df.select(pl.first('player_name')).item()}")
         logger.info(f"Starting with {pitcher_df.height} pitches")
-        pitcher_df = pitcher_df.sort(
-            [
-                "game_date",
-                "game_pk",
-                "inning",
-                "at_bat_number",
-                "pitch_number",
-            ],
-            descending=False,
-        )
+        pitcher_df = sort_by_time(pitcher_df)
         pitcher_df = create_run_diff_feature(pitcher_df)
         pitcher_df = create_lookback_features(pitcher_df)
         pitcher_df = create_count_feature(pitcher_df)

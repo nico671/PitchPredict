@@ -182,6 +182,19 @@ def handle_missing_values(df):
     return df
 
 
+def sort_by_time(df):
+    return df.sort(
+        [
+            "game_date",
+            "game_pk",
+            "inning",
+            "at_bat_number",
+            "pitch_number",
+        ],
+        descending=False,
+    )
+
+
 # encode all the categorical features as integers
 def encode_categorical_features(df):
     return df.with_columns(
@@ -195,16 +208,7 @@ def encode_categorical_features(df):
 
 
 def add_shift_features(df):
-    df = df.sort(
-        [
-            "game_date",
-            "game_pk",
-            "inning",
-            "at_bat_number",
-            "pitch_number",
-        ],
-        descending=False,
-    )
+    df = sort_by_time(df)
 
     # Previous N pitches
     for n in [1, 2, 3]:

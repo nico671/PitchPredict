@@ -5,17 +5,16 @@ import tensorflow as tf
 import yaml
 from sklearn.utils import compute_sample_weight
 from sklearn.utils.class_weight import compute_class_weight
-from tensorflow.keras.layers import (
+from tensorflow.keras.layers import (  # type: ignore
     LSTM,
-    Attention,
     BatchNormalization,
+    Bidirectional,
     Dense,
     Dropout,
     Input,
 )
-from tensorflow.keras.losses import SparseCategoricalCrossentropy
-from tensorflow.keras.models import Model
-from tensorflow.keras.regularizers import l2
+from tensorflow.keras.losses import SparseCategoricalCrossentropy  # type: ignore
+from tensorflow.keras.models import Model  # type: ignore
 
 from dvclive import Live
 from dvclive.keras import DVCLiveCallback
@@ -51,7 +50,10 @@ LSTM_UNITS = params["train"]["lstm_units"]
 
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.AdamW(
+        learning_rate=0.0001,
+        # clipnorm=1.0,
+    )
 
     model.compile(
         optimizer=optimizer,
@@ -64,12 +66,14 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
             monitor="val_loss",
             patience=PATIENCE,
             restore_best_weights=True,
+            mode="min",
         ),
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss",
             factor=0.5,
             patience=PATIENCE // 4,
             min_lr=1e-6,
+            mode="min",
         ),
         DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
@@ -81,59 +85,39 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
+        # class_weight=get_sample_weights(y_train),
     )
 
     return history
 
 
-def create_model(
-    input_shape,
-    num_classes,
-    lstm_units=16,
-    dropout_rate=0.1,
-    kernel_regularizer=0.01,
-):
+def create_model(input_shape, num_classes, lstm_units=LSTM_UNITS):
     inputs = Input(shape=input_shape)
 
-    # First LSTM layer with return_sequences=True
-    x = LSTM(
-        lstm_units,
-        return_sequences=True,
-        dropout=dropout_rate,
-        recurrent_dropout=dropout_rate,
-        kernel_regularizer=l2(kernel_regularizer),
+    # Bidirectional LSTM for better sequence learning
+    x = Bidirectional(
+        LSTM(
+            lstm_units,
+            return_sequences=True,
+            kernel_regularizer=tf.keras.regularizers.l2(0.01),
+        )
     )(inputs)
-    x = Dropout(dropout_rate)(x)
     x = BatchNormalization()(x)
+    x = Dropout(0.4)(x)
 
-    # Attention layer
-    x = Attention()([x, x])
-
-    x = LSTM(
-        lstm_units,
-        return_sequences=True,
-        dropout=dropout_rate,
-        recurrent_dropout=dropout_rate,
-        kernel_regularizer=l2(kernel_regularizer),
+    # Second LSTM layer
+    x = Bidirectional(
+        LSTM(lstm_units // 2, kernel_regularizer=tf.keras.regularizers.l2(0.01))
     )(x)
-    x = Dropout(dropout_rate)(x)
     x = BatchNormalization()(x)
+    x = Dropout(0.4)(x)
 
-    # Attention layer
-    x = Attention()([x, x])
-
-    x = LSTM(
-        lstm_units,
-        return_sequences=False,  # Changed to False
-        dropout=dropout_rate,
-        recurrent_dropout=dropout_rate,
-        kernel_regularizer=l2(kernel_regularizer),
+    # Dense layers with residual connections
+    dense1 = Dense(
+        64, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(0.01)
     )(x)
-    x = Dropout(dropout_rate)(x)
-    x = BatchNormalization()(x)
+    x = BatchNormalization()(dense1)
+    x = Dropout(0.3)(x)
 
-    # Main output
-    main_output = Dense(num_classes, activation="softmax", name="main_output")(x)
-
-    model = Model(inputs=inputs, outputs=main_output)
-    return model
+    outputs = Dense(num_classes, activation="softmax")(x)
+    return Model(inputs=inputs, outputs=outputs)

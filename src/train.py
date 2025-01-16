@@ -10,6 +10,7 @@ import numpy as np
 import polars as pl
 import yaml
 
+from src.utils.featurize_utils import sort_by_time
 from utils.lstm_model import compile_and_fit, create_model
 from utils.train_utils import create_training_data
 
@@ -38,12 +39,12 @@ def training_loop(df, params):
         "next_pitch",
         "pitcher",
         "player_name",
-        "pitch_type",
+        # "pitch_type",
         "game_date",
         "game_pk",
-        "at_bat_number",
-        "type",
-        "pitch_number",
+        # "at_bat_number",
+        # "type",
+        # "pitch_number",
     ]:
         features.remove(feature)
     logger.info(f"{len(features)} features: {features}")
@@ -54,15 +55,7 @@ def training_loop(df, params):
         pitcher_code, pitcher_df = pitcher_df
 
         # sort the dataframe by game date, game pk, inning, at bat number, and pitch number, ensuring the data is in time series order
-        pitcher_df = pitcher_df.sort(
-            [
-                "game_date",
-                "inning",
-                "at_bat_number",
-                "pitch_number",
-            ],
-            descending=False,
-        )
+        pitcher_df = sort_by_time(pitcher_df)
 
         # get the pitcher name and number of pitches
         pitcher_name = pitcher_df.select(pl.first("player_name")).item()

@@ -10,8 +10,8 @@ train:
   dropout: 0.4
   patience: 10
   kernel_regularizer: 0.1
-  batch_size: 16
+  batch_size: 8
   time_steps: 25
-  train_split: .7
+  train_split: .8
   epochs: 200
-  lstm_units: 32
+  lstm_units: 256
