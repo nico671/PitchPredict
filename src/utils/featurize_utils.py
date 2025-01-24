@@ -57,7 +57,11 @@ def create_base_state_feature(df):
 
 def add_batting_stats(df, start_year):
     # get the batting stats for all players since the start year
+    # try:
     batting_df = pb.batting_stats_bref(start_year)
+    # except Exception:
+    # print("oh fuck")
+    # return df, False
     # get the unique batter ids from the dataframe (there is probably a more "Polars" way to do this sorry)
     player_ids = list(df.select("batter").unique().to_pandas()["batter"])
     # filter the batting stats dataframe to only include the players in the unique batter ids (aka in our dataframe)
@@ -97,7 +101,7 @@ def add_batting_stats(df, start_year):
         .over(["batter", "pitch_type"])
         .alias("batter_pitch_type_avg"),
         (pl.col("stand") != pl.col("p_throws")).alias("platoon_advantage"),
-    )
+    ), True
 
 
 def create_lookback_features(df):
@@ -165,6 +169,12 @@ def create_target(df):
     # Ensure the `next_pitch` of the last pitch in a game is null (no valid next pitch)
     df = df.with_columns(
         pl.when(pl.col("game_pk").shift(-1) != pl.col("game_pk"))
+        .then(None)
+        .otherwise(pl.col("next_pitch"))
+        .alias("next_pitch")
+    )
+    df = df.with_columns(
+        pl.when(pl.col("inning").shift(-1) != pl.col("inning"))
         .then(None)
         .otherwise(pl.col("next_pitch"))
         .alias("next_pitch")

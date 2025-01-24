@@ -5,7 +5,7 @@ import polars as pl
 import yaml
 from sklearn.preprocessing import MinMaxScaler
 
-from src.utils.featurize_utils import sort_by_time
+from utils.featurize_utils import sort_by_time
 
 params_path = Path("params.yaml")
 with open(params_path, "r") as file:

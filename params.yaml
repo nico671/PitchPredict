@@ -1,7 +1,7 @@
 clean:
-  input_data_path: data/raw/2015_2024_statcast.parquet
-  num_pitchers: 2
-  start_year: 2023
+  input_data_path: data/raw/2015_2024_statcast_train.parquet
+  num_pitchers: 5
+  start_year: 2015
   min_pitches: 0
 featurize:
   input_data_path: data/cleaned/2015_2024_statcast_clean.parquet
@@ -10,8 +10,8 @@ train:
   dropout: 0.4
   patience: 10
   kernel_regularizer: 0.1
-  batch_size: 8
-  time_steps: 25
+  batch_size: 256
+  time_steps: 15
   train_split: .8
   epochs: 200
   lstm_units: 256

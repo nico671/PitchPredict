@@ -30,9 +30,6 @@ def get_sample_weights(y_train):
     )
     class_weight_dict = dict(zip(classes, class_weights))
 
-    # Normalize weights to sum to 1
-    total_weight = sum(class_weight_dict.values())
-    class_weight_dict = {k: v / total_weight for k, v in class_weight_dict.items()}
     return class_weight_dict
 
     sample_weights = compute_sample_weight(class_weight_dict, y_train)
@@ -50,13 +47,8 @@ LSTM_UNITS = params["train"]["lstm_units"]
 
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
-    optimizer = tf.keras.optimizers.AdamW(
-        learning_rate=0.0001,
-        # clipnorm=1.0,
-    )
-
     model.compile(
-        optimizer=optimizer,
+        optimizer=tf.keras.optimizers.SGD(),
         loss=SparseCategoricalCrossentropy(),
         metrics=["sparse_categorical_accuracy"],
     )
@@ -68,13 +60,13 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
             restore_best_weights=True,
             mode="min",
         ),
-        tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss",
-            factor=0.5,
-            patience=PATIENCE // 4,
-            min_lr=1e-6,
-            mode="min",
-        ),
+        # tf.keras.callbacks.ReduceLROnPlateau(
+        #     monitor="val_loss",
+        #     factor=0.5,
+        #     patience=PATIENCE // 4,
+        #     min_lr=1e-6,
+        #     mode="min",
+        # ),
         DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
 
@@ -85,7 +77,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
-        # class_weight=get_sample_weights(y_train),
+        class_weight=get_sample_weights(y_train),
     )
 
     return history
@@ -94,7 +86,6 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
 def create_model(input_shape, num_classes, lstm_units=LSTM_UNITS):
     inputs = Input(shape=input_shape)
 
-    # Bidirectional LSTM for better sequence learning
     x = Bidirectional(
         LSTM(
             lstm_units,
@@ -102,22 +93,28 @@ def create_model(input_shape, num_classes, lstm_units=LSTM_UNITS):
             kernel_regularizer=tf.keras.regularizers.l2(0.01),
         )
     )(inputs)
-    x = BatchNormalization()(x)
-    x = Dropout(0.4)(x)
+    for i in range(3):
+        x = BatchNormalization()(x)
+        x = Dropout(0.1)(x)
+        x = Bidirectional(
+            LSTM(
+                lstm_units,
+                return_sequences=True,
+                kernel_regularizer=tf.keras.regularizers.l2(0.01),
+            )
+        )(x)
 
-    # Second LSTM layer
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
     x = Bidirectional(
-        LSTM(lstm_units // 2, kernel_regularizer=tf.keras.regularizers.l2(0.01))
-    )(x)
+        LSTM(
+            lstm_units,
+            # return_sequences=True,
+            kernel_regularizer=tf.keras.regularizers.l2(0.01),
+        )
+    )(inputs)
     x = BatchNormalization()(x)
-    x = Dropout(0.4)(x)
-
-    # Dense layers with residual connections
-    dense1 = Dense(
-        64, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(0.01)
-    )(x)
-    x = BatchNormalization()(dense1)
-    x = Dropout(0.3)(x)
+    x = Dropout(0.1)(x)
 
     outputs = Dense(num_classes, activation="softmax")(x)
     return Model(inputs=inputs, outputs=outputs)

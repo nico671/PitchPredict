@@ -16,7 +16,6 @@ from utils.featurize_utils import (
     create_target,
     encode_categorical_features,
     handle_missing_values,
-    sort_by_time,
 )
 
 logger = logging.getLogger("feats of epic proportions")
@@ -46,43 +45,60 @@ def main():
 
     df = pl.read_parquet(Path(input_file_path))
     # create base state feature
-
     df_list = []
     for pitcher_df in df.group_by("pitcher"):
         # get the pitcher dataframe
         _, pitcher_df = pitcher_df
-        class_counts = pitcher_df.select(
-            pl.col("pitch_type").value_counts(normalize=True)
-        ).unnest("pitch_type")
-        rare_pitches = class_counts.filter(pl.col("proportion") < 0.03)
-        rare_pitches = rare_pitches.select(pl.col("pitch_type").unique())[
-            "pitch_type"
-        ].to_list()
-        pitcher_df = pitcher_df.with_columns(
-            pl.col("pitch_type").replace(rare_pitches, "Other").alias("pitch_type")
-        )
-        pitcher_df = encode_categorical_features(pitcher_df)
-
         logger.info(f"Pitcher: {pitcher_df.select(pl.first('player_name')).item()}")
         logger.info(f"Starting with {pitcher_df.height} pitches")
-        pitcher_df = sort_by_time(pitcher_df)
+        pitcher_df = pitcher_df.sort(
+            [
+                "game_date",
+                "game_pk",
+                "inning",
+                "at_bat_number",
+                "pitch_number",
+            ],
+            descending=False,
+        )
         pitcher_df = create_run_diff_feature(pitcher_df)
         pitcher_df = create_lookback_features(pitcher_df)
         pitcher_df = create_count_feature(pitcher_df)
         pitcher_df = create_base_state_feature(pitcher_df)
 
-        pitcher_df = add_batting_stats(pitcher_df, params["clean"]["start_year"])
-        pitcher_df = create_consistency_feature(pitcher_df)
-        pitcher_df = create_target(pitcher_df)
+        pitcher_df, passed = add_batting_stats(
+            pitcher_df, params["clean"]["start_year"]
+        )
+        if not passed:
+            logger.error(
+                f"Pitcher {pitcher_df.select(pl.first('player_name')).item()} did not pass the batting stats check"
+            )
+            continue
+        pitcher_df = encode_categorical_features(pitcher_df)
 
+        pitch_types = pitcher_df.select("pitch_type").unique()
+        pitcher_df = pitcher_df.with_columns(
+            pl.col("game_date").dt.year().alias("year").cast(pl.Int32)
+        )
+        for pitch_type in pitch_types["pitch_type"].to_list():
+            # Assuming pitcher_df is your DataFrame and pitch_type is the variable you are comparing
+            filtered = pitcher_df.filter(pl.col("pitch_type") == pitch_type)
+            years = filtered["year"].unique().to_list()
+
+            if len(years) != (2024 - params["clean"]["start_year"] + 1):
+                pitcher_df = pitcher_df.filter(~(pl.col("pitch_type") == pitch_type))
+        pitcher_df = pitcher_df.drop(["year"])
+        pitcher_df = create_consistency_feature(pitcher_df)
         # create target variable
 
-        logger.info(f"Ending with {pitcher_df.height} pitches")
+        pitcher_df = create_target(pitcher_df)
 
-        df_list.append(pitcher_df)
+        logger.info(f"Ending with {pitcher_df.height} pitches")
+        if "BA" in pitcher_df.columns:
+            df_list.append(pitcher_df)
 
     df = pl.concat(df_list)
-
+    logger.info(f"{len(df_list)} pitchers made it through the featurization")
     output_df = handle_missing_values(df)
     # Ensure output directory exists
     output_dir = Path("data/training")

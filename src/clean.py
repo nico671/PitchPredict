@@ -30,7 +30,6 @@ def main():
     # drop columns that will never be used
     df = df.drop(
         [
-            "Unnamed: 0",
             # "events",
             # "spin_dir",
             "delta_home_win_exp",
@@ -57,8 +56,6 @@ def main():
             "fielder_2",
             "umpire",
             "sv_id",
-            "pitcher.1",
-            "fielder_2.1",
             "fielder_3",
             "fielder_4",
             "fielder_5",
@@ -100,7 +97,7 @@ def main():
 
     # drop rows with null values in the columns 'pitch_type' and 'pitcher', as they cant be used for training
     df = df.drop_nulls(subset=["pitch_type", "pitcher"])
-
+    
     # get top k pitchers (decided by number of pitches and num_pitchers from params.yaml)
     pitcher_counts = df.group_by("pitcher").len().sort("len", descending=True)
     top_k_pitchers = pitcher_counts.head(params["clean"]["num_pitchers"]).select(

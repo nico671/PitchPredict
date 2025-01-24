@@ -88,19 +88,13 @@ plots:
     x: step
 - dvclive/Flaherty, Jack_logs/plots/metrics:
     x: step
-- dvclive/Keller, Mitch_logs/plots/metrics:
-    x: step
 - dvclive/Blanco, Ronel_logs/plots/metrics:
     x: step
 - dvclive/Flexen, Chris_logs/plots/metrics:
     x: step
 - dvclive/Fedde, Erick_logs/plots/metrics:
     x: step
-- dvclive/Ray, Robbie_logs/plots/metrics:
-    x: step
 - dvclive/Bumgarner, Madison_logs/plots/metrics:
-    x: step
-- dvclive/Verlander, Justin_logs/plots/metrics:
     x: step
 - dvclive/Keuchel, Dallas_logs/plots/metrics:
     x: step
@@ -124,17 +118,7 @@ plots:
     x: step
 - dvclive/Pérez, Martín_logs/plots/metrics:
     x: step
-- dvclive/Scherzer, Max_logs/plots/metrics:
-    x: step
-- dvclive/Wacha, Michael_logs/plots/metrics:
-    x: step
-- dvclive/Lynn, Lance_logs/plots/metrics:
-    x: step
-- dvclive/Sale, Chris_logs/plots/metrics:
-    x: step
 - dvclive/Bibee, Tanner_logs/plots/metrics:
-    x: step
-- dvclive/Brown, Hunter_logs/plots/metrics:
     x: step
 - dvclive/Skubal, Tarik_logs/plots/metrics:
     x: step
@@ -152,19 +136,35 @@ plots:
     x: step
 - dvclive/Burnes, Corbin_logs/plots/metrics:
     x: step
-- dvclive/Gausman, Kevin_logs/plots/metrics:
-    x: step
 - dvclive/Cease, Dylan_logs/plots/metrics:
-    x: step
-- dvclive/Berríos, José_logs/plots/metrics:
-    x: step
-- dvclive/Gibson, Kyle_logs/plots/metrics:
-    x: step
-- dvclive/Cole, Gerrit_logs/plots/metrics:
     x: step
 - dvclive/Nola, Aaron_logs/plots/metrics:
     x: step
 - dvclive/Wheeler, Zack_logs/plots/metrics:
+    x: step
+- dvclive/Keller, Mitch_logs/plots/metrics:
+    x: step
+- dvclive/Sale, Chris_logs/plots/metrics:
+    x: step
+- dvclive/Lynn, Lance_logs/plots/metrics:
+    x: step
+- dvclive/Wacha, Michael_logs/plots/metrics:
+    x: step
+- dvclive/Berríos, José_logs/plots/metrics:
+    x: step
+- dvclive/Ray, Robbie_logs/plots/metrics:
+    x: step
+- dvclive/Gausman, Kevin_logs/plots/metrics:
+    x: step
+- dvclive/Scherzer, Max_logs/plots/metrics:
+    x: step
+- dvclive/Verlander, Justin_logs/plots/metrics:
+    x: step
+- dvclive/Cole, Gerrit_logs/plots/metrics:
+    x: step
+- dvclive/Gibson, Kyle_logs/plots/metrics:
+    x: step
+- dvclive/Brown, Hunter_logs/plots/metrics:
     x: step
 metrics:
 - dvclive/Gallen, Zac_logs/metrics.json
@@ -193,13 +193,10 @@ metrics:
 - dvclive/King, Michael_logs/metrics.json
 - dvclive/Irvin, Jake_logs/metrics.json
 - dvclive/Flaherty, Jack_logs/metrics.json
-- dvclive/Keller, Mitch_logs/metrics.json
 - dvclive/Blanco, Ronel_logs/metrics.json
 - dvclive/Flexen, Chris_logs/metrics.json
 - dvclive/Fedde, Erick_logs/metrics.json
-- dvclive/Ray, Robbie_logs/metrics.json
 - dvclive/Bumgarner, Madison_logs/metrics.json
-- dvclive/Verlander, Justin_logs/metrics.json
 - dvclive/Keuchel, Dallas_logs/metrics.json
 - dvclive/Kershaw, Clayton_logs/metrics.json
 - dvclive/Gray, Sonny_logs/metrics.json
@@ -211,18 +208,23 @@ metrics:
 - dvclive/Greinke, Zack_logs/metrics.json
 - dvclive/Castillo, Luis_logs/metrics.json
 - dvclive/Pérez, Martín_logs/metrics.json
-- dvclive/Scherzer, Max_logs/metrics.json
-- dvclive/Wacha, Michael_logs/metrics.json
-- dvclive/Lynn, Lance_logs/metrics.json
-- dvclive/Sale, Chris_logs/metrics.json
 - dvclive/Bibee, Tanner_logs/metrics.json
-- dvclive/Brown, Hunter_logs/metrics.json
 - dvclive/Skubal, Tarik_logs/metrics.json
 - dvclive/Manaea, Sean_logs/metrics.json
 - dvclive/Rodón, Carlos_logs/metrics.json
 - dvclive/Severino, Luis_logs/metrics.json
 - dvclive/Quintana, Jose_logs/metrics.json
-- dvclive/Gibson, Kyle_logs/metrics.json
-- dvclive/Cole, Gerrit_logs/metrics.json
 - dvclive/Nola, Aaron_logs/metrics.json
 - dvclive/Wheeler, Zack_logs/metrics.json
+- dvclive/Keller, Mitch_logs/metrics.json
+- dvclive/Sale, Chris_logs/metrics.json
+- dvclive/Lynn, Lance_logs/metrics.json
+- dvclive/Wacha, Michael_logs/metrics.json
+- dvclive/Berríos, José_logs/metrics.json
+- dvclive/Ray, Robbie_logs/metrics.json
+- dvclive/Gausman, Kevin_logs/metrics.json
+- dvclive/Scherzer, Max_logs/metrics.json
+- dvclive/Verlander, Justin_logs/metrics.json
+- dvclive/Cole, Gerrit_logs/metrics.json
+- dvclive/Gibson, Kyle_logs/metrics.json
+- dvclive/Brown, Hunter_logs/metrics.json
