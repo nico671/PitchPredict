@@ -27,17 +27,6 @@ logger.addHandler(handler)
 
 def main():
     start_time = time.time()
-    # check for correct input length
-    if len(sys.argv) != 1:
-        logger.error("Arguments error. Usage:\n")
-        logger.error("not enough inputs, expected input structure is: *.py")
-        sys.exit(1)
-    # check for correct input file types
-    elif ".py" not in sys.argv[0]:
-        logger.error(
-            "Please enter a valid python source file as the first input for this stage"
-        )
-        sys.exit(1)
 
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
@@ -49,7 +38,7 @@ def main():
     for pitcher_df in df.group_by("pitcher"):
         # get the pitcher dataframe
         _, pitcher_df = pitcher_df
-        logger.info(f"Pitcher: {pitcher_df.select(pl.first('player_name')).item()}")
+        logger.info(f"Pitcher: {pitcher_df.select(pl.first('pitcher_name')).item()}")
         logger.info(f"Starting with {pitcher_df.height} pitches")
         pitcher_df = pitcher_df.sort(
             [
@@ -61,17 +50,17 @@ def main():
             ],
             descending=False,
         )
-        pitcher_df = create_run_diff_feature(pitcher_df)
-        pitcher_df = create_lookback_features(pitcher_df)
-        pitcher_df = create_count_feature(pitcher_df)
-        pitcher_df = create_base_state_feature(pitcher_df)
+        # pitcher_df = create_run_diff_feature(pitcher_df)
+        # pitcher_df = create_lookback_features(pitcher_df)
+        # pitcher_df = create_count_feature(pitcher_df)
+        # pitcher_df = create_base_state_feature(pitcher_df)
 
         pitcher_df, passed = add_batting_stats(
             pitcher_df, params["clean"]["start_year"]
         )
         if not passed:
             logger.error(
-                f"Pitcher {pitcher_df.select(pl.first('player_name')).item()} did not pass the batting stats check"
+                f"Pitcher {pitcher_df.select(pl.first('pitcher_name')).item()} did not pass the batting stats check"
             )
             continue
         pitcher_df = encode_categorical_features(pitcher_df)
@@ -88,14 +77,14 @@ def main():
             if len(years) != (2024 - params["clean"]["start_year"] + 1):
                 pitcher_df = pitcher_df.filter(~(pl.col("pitch_type") == pitch_type))
         pitcher_df = pitcher_df.drop(["year"])
-        pitcher_df = create_consistency_feature(pitcher_df)
+        # pitcher_df = create_consistency_feature(pitcher_df)
         # create target variable
 
         pitcher_df = create_target(pitcher_df)
 
         logger.info(f"Ending with {pitcher_df.height} pitches")
-        if "BA" in pitcher_df.columns:
-            df_list.append(pitcher_df)
+        # if "BA" in pitcher_df.columns:
+        df_list.append(pitcher_df)
 
     df = pl.concat(df_list)
     logger.info(f"{len(df_list)} pitchers made it through the featurization")

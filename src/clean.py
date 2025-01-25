@@ -16,14 +16,6 @@ with open("params.yaml", "r") as file:
 
 def main():
     start_time = time.time()
-    # check for correct input length
-    # if len(sys.argv) != 1 or ".py" not in sys.argv[0]:
-    #     logger.error("Arguments error. Usage:\n")
-    #     logger.error(
-    #         "not enough inputs or incorrect inputs, expected input structure is: *.py"
-    #     )
-    #     sys.exit(1)
-
     # read in the complete data frame
     df = pl.scan_parquet(params["clean"]["input_data_path"])
 
@@ -111,7 +103,7 @@ def main():
     df = df.filter(
         pl.col("pitcher").is_in(top_k_pitchers_list)
     )  # filter the dataframe to only include the top k pitchers
-
+    df = df.rename({"player_name": "pitcher_name"})
     df.sink_parquet(params["featurize"]["input_data_path"])
     end_time = time.time()
     logger.info(f"Cleaning took {end_time - start_time} seconds")

@@ -48,7 +48,7 @@ LSTM_UNITS = params["train"]["lstm_units"]
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     model.compile(
-        optimizer=tf.keras.optimizers.SGD(),
+        optimizer=tf.keras.optimizers.Adam(),
         loss=SparseCategoricalCrossentropy(),
         metrics=["sparse_categorical_accuracy"],
     )
@@ -60,13 +60,13 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
             restore_best_weights=True,
             mode="min",
         ),
-        # tf.keras.callbacks.ReduceLROnPlateau(
-        #     monitor="val_loss",
-        #     factor=0.5,
-        #     patience=PATIENCE // 4,
-        #     min_lr=1e-6,
-        #     mode="min",
-        # ),
+        tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.5,
+            patience=PATIENCE // 4,
+            min_lr=1e-6,
+            mode="min",
+        ),
         DVCLiveCallback(live=Live(f"dvclive/{pitcher_name}_logs")),
     ]
 
@@ -77,7 +77,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
-        class_weight=get_sample_weights(y_train),
+        # class_weight=get_sample_weights(y_train),
     )
 
     return history
@@ -93,16 +93,16 @@ def create_model(input_shape, num_classes, lstm_units=LSTM_UNITS):
             kernel_regularizer=tf.keras.regularizers.l2(0.01),
         )
     )(inputs)
-    for i in range(3):
-        x = BatchNormalization()(x)
-        x = Dropout(0.1)(x)
-        x = Bidirectional(
-            LSTM(
-                lstm_units,
-                return_sequences=True,
-                kernel_regularizer=tf.keras.regularizers.l2(0.01),
-            )
-        )(x)
+    # for i in range(3):
+    #     x = BatchNormalization()(x)
+    #     x = Dropout(0.1)(x)
+    #     x = Bidirectional(
+    #         LSTM(
+    #             lstm_units,
+    #             return_sequences=True,
+    #             kernel_regularizer=tf.keras.regularizers.l2(0.01),
+    #         )
+    #     )(x)
 
     x = BatchNormalization()(x)
     x = Dropout(0.1)(x)

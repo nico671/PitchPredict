@@ -8,10 +8,10 @@ featurize:
 train:
   input_data_path: data/training/2015_2024_statcast_train.parquet
   dropout: 0.4
-  patience: 10
+  patience: 5
   kernel_regularizer: 0.1
-  batch_size: 256
-  time_steps: 15
-  train_split: .8
+  batch_size: 128
+  time_steps: 25
+  train_split: .7
   epochs: 200
-  lstm_units: 256
+  lstm_units: 128

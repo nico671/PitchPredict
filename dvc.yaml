@@ -156,15 +156,17 @@ plots:
     x: step
 - dvclive/Gausman, Kevin_logs/plots/metrics:
     x: step
-- dvclive/Scherzer, Max_logs/plots/metrics:
-    x: step
 - dvclive/Verlander, Justin_logs/plots/metrics:
-    x: step
-- dvclive/Cole, Gerrit_logs/plots/metrics:
     x: step
 - dvclive/Gibson, Kyle_logs/plots/metrics:
     x: step
 - dvclive/Brown, Hunter_logs/plots/metrics:
+    x: step
+- dvclive/Cole, Gerrit_logs/plots/metrics:
+    x: step
+- dvclive/0_logs/plots/metrics:
+    x: step
+- dvclive/Scherzer, Max_logs/plots/metrics:
     x: step
 metrics:
 - dvclive/Gallen, Zac_logs/metrics.json
@@ -223,8 +225,9 @@ metrics:
 - dvclive/Berríos, José_logs/metrics.json
 - dvclive/Ray, Robbie_logs/metrics.json
 - dvclive/Gausman, Kevin_logs/metrics.json
-- dvclive/Scherzer, Max_logs/metrics.json
 - dvclive/Verlander, Justin_logs/metrics.json
-- dvclive/Cole, Gerrit_logs/metrics.json
 - dvclive/Gibson, Kyle_logs/metrics.json
 - dvclive/Brown, Hunter_logs/metrics.json
+- dvclive/Cole, Gerrit_logs/metrics.json
+- dvclive/0_logs/metrics.json
+- dvclive/Scherzer, Max_logs/metrics.json

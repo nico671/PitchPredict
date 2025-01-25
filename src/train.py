@@ -37,7 +37,7 @@ def training_loop(df, params):
     for feature in [
         "next_pitch",
         "pitcher",
-        "player_name",
+        "pitcher_name",
         "pitch_type",
         "game_date",
         "game_pk",
@@ -66,7 +66,7 @@ def training_loop(df, params):
         )
 
         # get the pitcher name and number of pitches
-        pitcher_name = pitcher_df.select(pl.first("player_name")).item()
+        pitcher_name = pitcher_df.select(pl.first("pitcher_name")).item()
         num_pitches = pitcher_df.height
 
         logger.info(
@@ -123,7 +123,7 @@ def training_loop(df, params):
                     )
                 )
             ),
-            "player_name": pitcher_name,
+            "pitcher_name": pitcher_name,
             "X_train": X_train,
             "y_train": y_train,
             "X_val": X_val,

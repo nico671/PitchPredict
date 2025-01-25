@@ -163,22 +163,23 @@ def create_count_feature(df):
 
 
 def create_target(df):
+    df = sort_by_time(df)
     # Add a `next_pitch` column by shifting `pitch_type`
     df = df.with_columns(pl.col("pitch_type").shift(-1).alias("next_pitch"))
 
     # Ensure the `next_pitch` of the last pitch in a game is null (no valid next pitch)
-    df = df.with_columns(
-        pl.when(pl.col("game_pk").shift(-1) != pl.col("game_pk"))
-        .then(None)
-        .otherwise(pl.col("next_pitch"))
-        .alias("next_pitch")
-    )
-    df = df.with_columns(
-        pl.when(pl.col("inning").shift(-1) != pl.col("inning"))
-        .then(None)
-        .otherwise(pl.col("next_pitch"))
-        .alias("next_pitch")
-    )
+    # df = df.with_columns(
+    #     pl.when(pl.col("game_pk").shift(-1) != pl.col("game_pk"))
+    #     .then(None)
+    #     .otherwise(pl.col("next_pitch"))
+    #     .alias("next_pitch")
+    # )
+    # df = df.with_columns(
+    #     pl.when(pl.col("inning").shift(-1) != pl.col("inning"))
+    #     .then(None)
+    #     .otherwise(pl.col("next_pitch"))
+    #     .alias("next_pitch")
+    # )
 
     # Drop rows where `next_pitch` is null
     df = df.drop_nulls("next_pitch")
@@ -210,7 +211,7 @@ def encode_categorical_features(df):
     return df.with_columns(
         df.select(
             pl.col(pl.String)
-            .exclude(["player_name"])
+            .exclude(["pitcher_name"])
             .cast(pl.Categorical)
             .to_physical()
         ),
