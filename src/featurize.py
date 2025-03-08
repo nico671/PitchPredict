@@ -1,5 +1,4 @@
 import logging
-import sys
 import time
 from pathlib import Path
 
@@ -7,12 +6,6 @@ import polars as pl
 import yaml
 
 from utils.featurize_utils import (
-    add_batting_stats,
-    create_base_state_feature,
-    create_consistency_feature,
-    create_count_feature,
-    create_lookback_features,
-    create_run_diff_feature,
     create_target,
     encode_categorical_features,
     handle_missing_values,
@@ -55,14 +48,14 @@ def main():
         # pitcher_df = create_count_feature(pitcher_df)
         # pitcher_df = create_base_state_feature(pitcher_df)
 
-        pitcher_df, passed = add_batting_stats(
-            pitcher_df, params["clean"]["start_year"]
-        )
-        if not passed:
-            logger.error(
-                f"Pitcher {pitcher_df.select(pl.first('pitcher_name')).item()} did not pass the batting stats check"
-            )
-            continue
+        # pitcher_df, passed = add_batting_stats(
+        #     pitcher_df, params["clean"]["start_year"]
+        # # )
+        # if not passed:
+        #     logger.error(
+        #         f"Pitcher {pitcher_df.select(pl.first('pitcher_name')).item()} did not pass the batting stats check"
+        #     )
+        #     continue
         pitcher_df = encode_categorical_features(pitcher_df)
 
         pitch_types = pitcher_df.select("pitch_type").unique()

@@ -3,14 +3,11 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 import yaml
-from sklearn.utils import compute_sample_weight
 from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.keras.layers import (  # type: ignore
     LSTM,
-    BatchNormalization,
     Bidirectional,
     Dense,
-    Dropout,
     Input,
 )
 from tensorflow.keras.losses import SparseCategoricalCrossentropy  # type: ignore
@@ -32,8 +29,8 @@ def get_sample_weights(y_train):
 
     return class_weight_dict
 
-    sample_weights = compute_sample_weight(class_weight_dict, y_train)
-    return sample_weights
+    # sample_weights = compute_sample_weight(class_weight_dict, y_train)
+    # return sample_weights
 
 
 # load hyperparameters from params.yaml, not sure if this is the best way to do this but it works
@@ -44,22 +41,24 @@ PATIENCE = params["train"]["patience"]
 BATCH_SIZE = params["train"]["batch_size"]
 EPOCHS = params["train"]["epochs"]
 LSTM_UNITS = params["train"]["lstm_units"]
+DROPOUT = params["train"]["dropout"]
+KERN_REG = params["train"]["kernel_regularizer"]
 
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(),
+        optimizer=tf.keras.optimizers.SGD(),
         loss=SparseCategoricalCrossentropy(),
         metrics=["sparse_categorical_accuracy"],
     )
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            patience=PATIENCE,
-            restore_best_weights=True,
-            mode="min",
-        ),
+        # tf.keras.callbacks.EarlyStopping(
+        #     monitor="val_loss",
+        #     patience=PATIENCE,
+        #     restore_best_weights=True,
+        #     mode="min",
+        # ),
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss",
             factor=0.5,
@@ -77,7 +76,7 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, pitcher_name):
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=callbacks,
-        # class_weight=get_sample_weights(y_train),
+        class_weight=get_sample_weights(y_train),
     )
 
     return history
@@ -89,32 +88,10 @@ def create_model(input_shape, num_classes, lstm_units=LSTM_UNITS):
     x = Bidirectional(
         LSTM(
             lstm_units,
-            return_sequences=True,
-            kernel_regularizer=tf.keras.regularizers.l2(0.01),
+            return_sequences=False,
+            # kernel_regularizer=tf.keras.regularizers.l2(KERN_REG),
         )
     )(inputs)
-    # for i in range(3):
-    #     x = BatchNormalization()(x)
-    #     x = Dropout(0.1)(x)
-    #     x = Bidirectional(
-    #         LSTM(
-    #             lstm_units,
-    #             return_sequences=True,
-    #             kernel_regularizer=tf.keras.regularizers.l2(0.01),
-    #         )
-    #     )(x)
-
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
-    x = Bidirectional(
-        LSTM(
-            lstm_units,
-            # return_sequences=True,
-            kernel_regularizer=tf.keras.regularizers.l2(0.01),
-        )
-    )(inputs)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
 
     outputs = Dense(num_classes, activation="softmax")(x)
     return Model(inputs=inputs, outputs=outputs)
