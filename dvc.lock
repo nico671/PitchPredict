@@ -9,27 +9,39 @@ stages:
       size: 849955607
     - path: src/clean.py
       hash: md5
-      md5: eaafd29cf5f7043d2c29b2f580b82153
-      size: 3100
+      md5: a756af21895519f559a63a5cae5f795f
+      size: 3425
     outs:
     - path: data/clean_statcast_data.parquet
       hash: md5
-      md5: c3cc8874f884b48ead830584c3693aba
-      size: 10035529
+      md5: e2785294583d3bb6ae22ac2c81113e0c
+      size: 10035573
   featurize:
     cmd: uv run src/featurize.py
     deps:
     - path: data/clean_statcast_data.parquet
       hash: md5
-      md5: c3cc8874f884b48ead830584c3693aba
-      size: 10035529
+      md5: e2785294583d3bb6ae22ac2c81113e0c
+      size: 10035573
     - path: src/featurize.py
       hash: md5
-      md5: 494d1e93f7f53d70f6d5be3d2ecbba39
-      size: 3987
+      md5: 98c7fbf7e84e857705eeda673ede6eb6
+      size: 4285
     outs:
     - path: data/featurized/
       hash: md5
-      md5: 0241723592fb517d00eaf27f414ce2a2.dir
-      size: 21203368
+      md5: 076b6cc64b815c723f3c0f82580924f6.dir
+      size: 19898526
       nfiles: 5
+  train:
+    cmd: uv run src/train.py
+    deps:
+    - path: data/featurized/
+      hash: md5
+      md5: 076b6cc64b815c723f3c0f82580924f6.dir
+      size: 19898526
+      nfiles: 5
+    - path: src/train.py
+      hash: md5
+      md5: ebb5983c3a78373cf28b64d7b7430823
+      size: 2887
