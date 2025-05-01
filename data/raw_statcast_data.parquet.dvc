@@ -1,0 +1,5 @@
+outs:
+- md5: 716f167ba1785d483d09310ca0d35ea0
+  size: 849955607
+  hash: md5
+  path: raw_statcast_data.parquet

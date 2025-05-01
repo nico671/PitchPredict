@@ -1,0 +1,18 @@
+schema: '2.0'
+stages:
+  clean:
+    cmd: uv run src/clean.py
+    deps:
+    - path: data/raw_statcast_data.parquet
+      hash: md5
+      md5: 716f167ba1785d483d09310ca0d35ea0
+      size: 849955607
+    - path: src/clean.py
+      hash: md5
+      md5: 016f3de4d2d26d4546e744d19ce913a6
+      size: 2990
+    outs:
+    - path: data/clean_statcast_data.parquet
+      hash: md5
+      md5: 8592720ced418e4a670116ab8978105a
+      size: 9975272

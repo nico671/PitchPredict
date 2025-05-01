@@ -1,0 +1,8 @@
+stages:
+  clean:
+    cmd: uv run src/clean.py
+    deps:
+      - src/clean.py
+      - data/raw_statcast_data.parquet
+    outs:
+      - data/clean_statcast_data.parquet
