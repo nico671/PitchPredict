@@ -18,3 +18,12 @@ stages:
     deps:
       - src/train.py
       - data/featurized/
+    outs:
+      - models/
+  evaluate:
+    cmd: uv run src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - models/
+    outs:
+      - metrics/evaluation.json

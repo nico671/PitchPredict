@@ -9,39 +9,62 @@ stages:
       size: 849955607
     - path: src/clean.py
       hash: md5
-      md5: a756af21895519f559a63a5cae5f795f
-      size: 3425
+      md5: 140f7a8379ceb0a60d2f673b11c2f847
+      size: 3439
     outs:
     - path: data/clean_statcast_data.parquet
       hash: md5
-      md5: e2785294583d3bb6ae22ac2c81113e0c
-      size: 10035573
+      md5: 8439616e7775471e38b2eb1aeb97df04
+      size: 10035668
   featurize:
     cmd: uv run src/featurize.py
     deps:
     - path: data/clean_statcast_data.parquet
       hash: md5
-      md5: e2785294583d3bb6ae22ac2c81113e0c
-      size: 10035573
+      md5: 8439616e7775471e38b2eb1aeb97df04
+      size: 10035668
     - path: src/featurize.py
       hash: md5
-      md5: 98c7fbf7e84e857705eeda673ede6eb6
-      size: 4285
+      md5: db554472de0bea24c723af092c4583bf
+      size: 4054
     outs:
     - path: data/featurized/
       hash: md5
-      md5: 076b6cc64b815c723f3c0f82580924f6.dir
-      size: 19898526
+      md5: 86331d9b73155d7a829d1486f0350603.dir
+      size: 19357074
       nfiles: 5
   train:
     cmd: uv run src/train.py
     deps:
     - path: data/featurized/
       hash: md5
-      md5: 076b6cc64b815c723f3c0f82580924f6.dir
-      size: 19898526
+      md5: 86331d9b73155d7a829d1486f0350603.dir
+      size: 19357074
       nfiles: 5
     - path: src/train.py
       hash: md5
-      md5: ebb5983c3a78373cf28b64d7b7430823
-      size: 2887
+      md5: 9fc24df99b3deaae345513de27f7b187
+      size: 5896
+    outs:
+    - path: models/
+      hash: md5
+      md5: 449a8b13086810e3ec540b63b5b05761.dir
+      size: 466151
+      nfiles: 10
+  evaluate:
+    cmd: uv run src/evaluate.py
+    deps:
+    - path: models/
+      hash: md5
+      md5: b7680fb74bfb6213d2e50701aa8140af.dir
+      size: 583610
+      nfiles: 25
+    - path: src/evaluate.py
+      hash: md5
+      md5: 64da25a17689d4b640cabfbcb14c1706
+      size: 5532
+    outs:
+    - path: metrics/evaluation.json
+      hash: md5
+      md5: 2bc87e2b7448488509d5ade2e3ddc6aa
+      size: 1551

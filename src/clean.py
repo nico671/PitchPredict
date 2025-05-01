@@ -3,7 +3,7 @@ import yaml
 
 keep_cols = [
     "pitch_type",
-    "pitcher",
+    "player_name",
     "game_date",
     "game_pk",
     "release_speed",
@@ -79,16 +79,16 @@ def clean():
         ]
     )
 
-    top_k_pitcher_codes = (
-        df.group_by("pitcher")
+    top_k_player_codes = (
+        df.group_by("player_name")
         .agg(pl.col("pitch_type").count().alias("pitch_count"))
         .sort("pitch_count", descending=True)
         .head(5)
-        .select(pl.col("pitcher"))
+        .select(pl.col("player_name"))
         .to_series()
         .to_list()
     )
-    df = df.filter(pl.col("pitcher").is_in(top_k_pitcher_codes))
+    df = df.filter(pl.col("player_name").is_in(top_k_player_codes))
     # only keep the columns we need
     df = df.select(keep_cols)
 
