@@ -4,6 +4,7 @@ stages:
     deps:
       - src/clean.py
       - data/raw_statcast_data.parquet
+      - params.yaml
     outs:
       - data/clean_statcast_data.parquet
   featurize:
@@ -27,3 +28,8 @@ stages:
       - models/
     outs:
       - metrics/evaluation.json
+metrics:
+  - dvclive/metrics.json
+plots:
+  - dvclive/plots/metrics:
+      x: step

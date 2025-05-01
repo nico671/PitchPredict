@@ -7,58 +7,62 @@ stages:
       hash: md5
       md5: 716f167ba1785d483d09310ca0d35ea0
       size: 849955607
+    - path: params.yaml
+      hash: md5
+      md5: a215c13ac806b845777a169c0abb108b
+      size: 43
     - path: src/clean.py
       hash: md5
-      md5: 140f7a8379ceb0a60d2f673b11c2f847
-      size: 3439
+      md5: b6e58e8d73ed166f0b8cd3135f5d0b9a
+      size: 6046
     outs:
     - path: data/clean_statcast_data.parquet
       hash: md5
-      md5: 8439616e7775471e38b2eb1aeb97df04
-      size: 10035668
+      md5: 4433e36c82d312a0da6c18ec6e0e17f7
+      size: 4329099
   featurize:
     cmd: uv run src/featurize.py
     deps:
     - path: data/clean_statcast_data.parquet
       hash: md5
-      md5: 8439616e7775471e38b2eb1aeb97df04
-      size: 10035668
+      md5: 4433e36c82d312a0da6c18ec6e0e17f7
+      size: 4329099
     - path: src/featurize.py
       hash: md5
-      md5: db554472de0bea24c723af092c4583bf
-      size: 4054
+      md5: ce983044e1bf57db37ee9398c10f0530
+      size: 1454
     outs:
     - path: data/featurized/
       hash: md5
-      md5: 86331d9b73155d7a829d1486f0350603.dir
-      size: 19357074
-      nfiles: 5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
   train:
     cmd: uv run src/train.py
     deps:
     - path: data/featurized/
       hash: md5
-      md5: 86331d9b73155d7a829d1486f0350603.dir
-      size: 19357074
-      nfiles: 5
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
     - path: src/train.py
       hash: md5
-      md5: 9fc24df99b3deaae345513de27f7b187
-      size: 5896
+      md5: fc7564bd66d1a5d1b9c7e0ba5d491800
+      size: 5423
     outs:
     - path: models/
       hash: md5
-      md5: 449a8b13086810e3ec540b63b5b05761.dir
-      size: 466151
-      nfiles: 10
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
   evaluate:
     cmd: uv run src/evaluate.py
     deps:
     - path: models/
       hash: md5
-      md5: b7680fb74bfb6213d2e50701aa8140af.dir
-      size: 583610
-      nfiles: 25
+      md5: 57b3e6ed3f511c031a6a09ffc45e143b.dir
+      size: 27840189
+      nfiles: 10
     - path: src/evaluate.py
       hash: md5
       md5: 64da25a17689d4b640cabfbcb14c1706
@@ -66,5 +70,5 @@ stages:
     outs:
     - path: metrics/evaluation.json
       hash: md5
-      md5: 2bc87e2b7448488509d5ade2e3ddc6aa
-      size: 1551
+      md5: a00505264f0d047813b5895eb53ae9d9
+      size: 724
