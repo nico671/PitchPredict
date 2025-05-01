@@ -111,6 +111,17 @@ def clean():
             for col in cont_cols
         ]
     )
+    # for col in df.columns:
+    #     print(f"{col}: {df[col].dtype}")
+    cat_cols = [
+        "stand",
+        "p_throws",
+        "inning_topbot",
+        "if_fielding_alignment",
+        "of_fielding_alignment",
+    ]
+    for col in cat_cols:
+        df = df.with_columns(pl.col(col).cast(pl.Categorical).to_physical())
     df = df.with_columns(pl.col("game_date").str.strptime(pl.Date, format="%Y-%m-%d"))
     df.write_parquet("data/clean_statcast_data.parquet")
     print("Cleaned data saved to data/clean_statcast_data.parquet")

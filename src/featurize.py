@@ -8,7 +8,7 @@ OUTPUT_DIR = "data/featurized"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 SEQ_LEN = 10
 feature_cols = [
-    "pitch_type",
+    "pitch_type_code",
     "release_speed",
     "release_pos_x",
     "release_pos_z",
@@ -59,10 +59,22 @@ def featurize_for_single_pitcher(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     pitcher_df = df.filter(pl.col("pitcher") == pitcher_id)
 
-    # create target variable
     pitcher_df = pitcher_df.with_columns(
-        pl.col("pitch_type").shift(-1).over("game_pk").alias("next_pitch_type")
-    ).drop_nulls(["next_pitch_type"])
+        [
+            pl.col("pitch_type")
+            .cast(pl.Categorical)
+            .to_physical()
+            .alias("pitch_type_code"),
+        ]
+    )
+
+    # 2) Create next‐pitch target (still as string), then encode it too:
+    pitcher_df = pitcher_df.with_columns(
+        pl.col("pitch_type_code")
+        .shift(-1)
+        .over("game_pk")
+        .alias("next_pitch_type_code")
+    ).drop_nulls("next_pitch_type_code")
 
     # LAG_COLS = [
     #     "pitch_type",
@@ -97,7 +109,7 @@ def featurize_for_single_pitcher(
         ]
     )
     X_raw = pitcher_df.select(feature_cols).to_numpy()
-    y_raw = pitcher_df.select("next_pitch_type").to_numpy()
+    y_raw = pitcher_df.select("next_pitch_type_code").to_numpy()
 
     Xs, ys = [], []
     for i in range(SEQ_LEN, len(X_raw)):
