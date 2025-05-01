@@ -9,10 +9,27 @@ stages:
       size: 849955607
     - path: src/clean.py
       hash: md5
-      md5: 68b8b66f987ca1bf73b6b0fd160b977a
-      size: 3076
+      md5: eaafd29cf5f7043d2c29b2f580b82153
+      size: 3100
     outs:
     - path: data/clean_statcast_data.parquet
       hash: md5
-      md5: 2b11a7f6b36e2413acce96a06a976c92
-      size: 9974745
+      md5: c3cc8874f884b48ead830584c3693aba
+      size: 10035529
+  featurize:
+    cmd: uv run src/featurize.py
+    deps:
+    - path: data/clean_statcast_data.parquet
+      hash: md5
+      md5: c3cc8874f884b48ead830584c3693aba
+      size: 10035529
+    - path: src/featurize.py
+      hash: md5
+      md5: 494d1e93f7f53d70f6d5be3d2ecbba39
+      size: 3987
+    outs:
+    - path: data/featurized/
+      hash: md5
+      md5: 0241723592fb517d00eaf27f414ce2a2.dir
+      size: 21203368
+      nfiles: 5

@@ -1,9 +1,11 @@
 import polars as pl
 import yaml
 
-feature_cols = [
+keep_cols = [
     "pitch_type",
+    "pitcher",
     "game_date",
+    "game_pk",
     "release_speed",
     "release_pos_x",
     "release_pos_z",
@@ -88,7 +90,7 @@ def clean():
     )
     df = df.filter(pl.col("pitcher").is_in(top_k_pitcher_codes))
     # only keep the columns we need
-    df = df.select(feature_cols)
+    df = df.select(keep_cols)
 
     df = encode_base_states(df)
     df = df.fill_null(-1)

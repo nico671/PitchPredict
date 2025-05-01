@@ -6,3 +6,10 @@ stages:
       - data/raw_statcast_data.parquet
     outs:
       - data/clean_statcast_data.parquet
+  featurize:
+    cmd: uv run src/featurize.py
+    deps:
+      - src/featurize.py
+      - data/clean_statcast_data.parquet
+    outs:
+      - data/featurized/
